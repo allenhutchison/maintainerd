@@ -184,7 +184,7 @@ gh issue list --repo <config.repo> --state closed --label <config.labels.testQua
 
 Skip when:
 
-- An open PR with a `audit-tests-` branch already addresses this file+category (it may be from a run an hour ago — **the most important dedup, because this skill runs often**).
+- An open PR with an `audit-tests-` branch already addresses this file+category (it may be from a run an hour ago — **the most important dedup, because this skill runs often**).
 - An open `arch-*` PR touches the same test/source file (let it land first; auditing a file mid-flight causes conflicts).
 - An open `config.labels.testQuality` issue already describes it.
 - A human closed the same finding `wontfix` — that's their standing answer; don't refile.
