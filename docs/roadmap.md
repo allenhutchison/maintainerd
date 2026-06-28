@@ -98,14 +98,21 @@ repo-scoped** — it writes to a *personal vault* and spans projects. That sugge
 (working name **`journal`**) for maintainer-scoped narration/record-keeping, alongside future
 siblings like a decision-log or a weekly-review skill.
 
-**Design implication worth resolving when we implement it:** worklog needs config the current
-contract doesn't carry — a vault path, the project-hub note, the daily-note location. Two options:
-- Add a `journal` section to `maintainerd.json` (vault path, hub-note pattern, date format), or
-- Keep journal config in a separate `~/.claude/`-level file since it's per-user, not per-repo
-  (the vault is the same across all the user's repos).
+**Resolved design (two-tier config).** The intended usage is: install the plugins once at the
+**user level**, then use them across many repos; each repo-scoped skill discovers that repo's
+`.claude/maintainerd.json` as it runs there. User-scoped skills like `worklog` follow the same
+grain — their settings live in a **user-level** config (`~/.claude/maintainerd.json`), read once
+and shared across every repo. That file carries the things that are per-*user*, not per-*repo*:
+- `journal.vault` — the Obsidian vault root (the same vault backs every repo's worklog).
+- anything else not auto-discoverable. Most of the rest worklog already discovers from the vault
+  itself (it reads `.obsidian/daily-notes.json` for the daily-note folder/format).
 
-The per-user-not-per-repo nature is the key question. Leaning toward a user-level config that the
-repo-level `maintainerd.json` can point at, so one vault setup serves every onboarded repo.
+The only genuinely per-repo bit is *which* project folder / hub note a given repo maps to. That's
+an optional `journal.hubNote` pointer in the repo-level `maintainerd.json`, falling back to
+matching the repo name against `Projects/**`. So the rule stays clean: **repo-scoped settings →
+repo config; user-scoped settings → user config**, and worklog bridges them with one optional
+per-repo pointer. The canonical `config-schema.md` gains a "User-level config" section when
+`worklog` ships.
 
 | Skill | Status | Source | What it does |
 | --- | --- | --- | --- |
@@ -126,8 +133,8 @@ source to extract from:
 4. `audit-deps` (✨)
 5. `doctor` (✨)
 
-Plus `worklog` (♻️) as the first skill in the new `journal` category, pending the user-vs-repo
-config decision above.
+Plus `worklog` (♻️) as the first skill in the new `journal` category — its config home is now
+settled (user-level `~/.claude/maintainerd.json`; see the journal section above).
 
 And whenever the `auto-dev` rollout happens, pull in `create-issue` (✨) alongside it — a pipeline
 is only as good as the issues fed into it, and `create-issue` is the front-door that keeps them
