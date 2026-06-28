@@ -14,7 +14,7 @@
     {
       "name": "repo-ops",
       "source": "./plugins/repo-ops",
-      "description": "Baseline maintainer dev flow: create-pr (pre-flight-gated PRs), code-review, daily-changelog, and the daily-update meta-skill. Config-driven via .claude/maintainerd.json.",
+      "description": "Baseline maintainer dev flow: create-pr (pre-flight-gated PRs), address-review (iterate on bot + human PR feedback to approval), code-review, daily-changelog, and the daily-update meta-skill. Config-driven via .claude/maintainerd.json.",
       "version": "0.1.0"
     },
     {

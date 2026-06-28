@@ -116,6 +116,13 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
   "researchRadar": {
     "themes":    "derive",  // "derive" (infer from repo) | ["explicit", "theme", "list"]
     "userAgent": "research-radar/1.0 (mailto:you@example.com)" // arXiv API courtesy UA
+  },
+
+  // ── review feedback (address-review) ─────────────────────────────────────────
+  "review": {
+    // Automated-reviewer logins to recognize. Humans need no listing — any reviewer
+    // who isn't the PR author is treated as a human reviewer. Optional; defaults to these two.
+    "bots": ["coderabbitai[bot]", "gemini-code-assist[bot]"]
   }
 }
 ```
@@ -157,7 +164,7 @@ as benign rather than "a human is mid-work."
 
 Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
 
-### `labels`, `audits`, `dailyUpdate`, `autoDev`, `researchRadar`
+### `labels`, `audits`, `dailyUpdate`, `autoDev`, `researchRadar`, `review`
 
 - `labels.*` — GitHub label names the skills apply. They must already exist in the repo (bootstrap
   offers to create them).
@@ -168,6 +175,9 @@ Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
 - `autoDev.*` — the `auto:*` state-machine label names, the bot comment `marker`, the branch
   prefix, the labels that exclude an issue from auto-building, and whether PRs open as drafts.
 - `researchRadar.themes` — `"derive"` to infer themes from the repo, or an explicit string array.
+- `review.bots` *(optional)* — extra automated-reviewer logins `address-review` should recognize.
+  Defaults to `["coderabbitai[bot]", "gemini-code-assist[bot]"]`. Humans are auto-detected (any
+  reviewer who isn't the PR author), so only bots go here.
 
 ---
 

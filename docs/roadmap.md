@@ -27,7 +27,7 @@ suite's scope coherent.
 | Plugin | Skills |
 | --- | --- |
 | `maintainerd-core` | `bootstrap` |
-| `repo-ops` | `create-pr`, `code-review`, `daily-changelog`, `daily-update` |
+| `repo-ops` | `create-pr`, `address-review`, `code-review`, `daily-changelog`, `daily-update` |
 | `audits` | `audit-architecture`, `audit-tests`, `audit-design-docs`, `audit-product-docs` |
 | `research` | `research-radar` |
 | `auto-dev` | `auto-dev`, `review-queue` |
@@ -39,7 +39,7 @@ suite's scope coherent.
 | Skill | Status | Source | What it does |
 | --- | --- | --- | --- |
 | `release` | ♻️ Extract | `release-process` in both repos | Version bump → promote the daily changelog into versioned release notes → tag → GitHub release → verify. The "ship a version" counterpart to `daily-changelog`'s "record a day." |
-| `address-review` | ♻️ Extract | `coderabbit-review` (global) | The review-response loop: fetch every thread (CodeRabbit / Gemini / human) → classify → fix real ones (one commit each) → reply to every thread → wait for the next round. Closes the PR lifecycle alongside `create-pr`. |
+| ~~`address-review`~~ | ✅ **Shipped** | was `coderabbit-review` (global) | The review-response loop, expanded so bot (CodeRabbit / gemini-code-assist / `config.review.bots`) and human feedback are equal first-class citizens: fetch → triage → fix (one commit each) → pre-flight → push → reply to every inline thread + a PR-level round summary → wait → repeat to approval. Closes the PR lifecycle alongside `create-pr`. |
 
 ## audits candidates (capped, silent-on-clean findings)
 
@@ -124,14 +124,13 @@ per-repo pointer. The canonical `config-schema.md` gains a "User-level config" s
 
 ## Suggested v0.2 batch
 
-Closes the loop *bootstrap → build → review → ship → keep-healthy*, and four of five have existing
-source to extract from:
+Closes the loop *bootstrap → build → review → ship → keep-healthy*. `address-review` is done (✅);
+the rest:
 
 1. `release` (♻️)
-2. `address-review` (♻️)
-3. `audit-security` (✨)
-4. `audit-deps` (✨)
-5. `doctor` (✨)
+2. `audit-security` (✨)
+3. `audit-deps` (✨)
+4. `doctor` (✨)
 
 Plus `worklog` (♻️) as the first skill in the new `journal` category — its config home is now
 settled (user-level `~/.claude/maintainerd.json`; see the journal section above).

@@ -15,7 +15,7 @@ skill generates that contract for any repo.
 | Plugin | Skills | Install when |
 | --- | --- | --- |
 | **maintainerd-core** | `bootstrap` | Always — it generates the config every other plugin needs. |
-| **repo-ops** | `create-pr`, `code-review`, `daily-changelog`, `daily-update` | You want the baseline PR + changelog dev flow. |
+| **repo-ops** | `create-pr`, `address-review`, `code-review`, `daily-changelog`, `daily-update` | You want the baseline PR + changelog dev flow. |
 | **audits** | `audit-architecture`, `audit-tests`, `audit-design-docs`, `audit-product-docs` | You want scheduled tech-debt / test / doc sweeps. |
 | **research** | `research-radar` | You want proactive research surfaced — a periodic arXiv scan for papers relevant to this repo. |
 | **auto-dev** | `auto-dev`, `review-queue` | You want the autonomous issue→PR pipeline. |
@@ -81,7 +81,7 @@ maintainerd/
   .claude-plugin/marketplace.json
   plugins/
     core/      .claude-plugin/plugin.json  skills/bootstrap/  reference/config-schema.md
-    repo-ops/  .claude-plugin/plugin.json  skills/{create-pr,code-review,daily-changelog,daily-update}/
+    repo-ops/  .claude-plugin/plugin.json  skills/{create-pr,address-review,code-review,daily-changelog,daily-update}/
     audits/    .claude-plugin/plugin.json  skills/{audit-architecture,audit-tests,audit-design-docs,audit-product-docs}/
     research/  .claude-plugin/plugin.json  skills/{research-radar}/
     auto-dev/  .claude-plugin/plugin.json  skills/{auto-dev,review-queue}/
