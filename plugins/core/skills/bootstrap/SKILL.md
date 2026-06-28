@@ -1,6 +1,6 @@
 ---
 name: bootstrap
-description: Generate the agent-skills config contract for a repo — write `.claude/agent-skills.json` and scaffold `.claude/guidelines/{coding,testing,invariants}.md` so the repo-ops, audits, and auto-dev skills can run here. Inspects the repo (language, GitHub slug, default branch, source/test dirs, lint/format/build/test commands), confirms anything ambiguous, and seeds starter guidelines from existing CLAUDE.md/AGENTS.md. Use when the user asks to "bootstrap this repo", "set up agent-skills", "create the agent-skills config", "configure the maintainer skills", "onboard this repo to agent-skills", or when any other agent-skills skill reports the config is missing. Idempotent — re-running re-confirms and only rewrites changed keys; never clobbers hand-edited guideline prose.
+description: Generate the agent-skills config contract for a repo — write `.claude/agent-skills.json` and scaffold `.claude/guidelines/{coding,testing,invariants}.md` so the repo-ops, audits, research, and auto-dev skills can run here. Inspects the repo (language, GitHub slug, default branch, source/test dirs, lint/format/build/test commands), confirms anything ambiguous, and seeds starter guidelines from existing CLAUDE.md/AGENTS.md. Use when the user asks to "bootstrap this repo", "set up agent-skills", "create the agent-skills config", "configure the maintainer skills", "onboard this repo to agent-skills", or when any other agent-skills skill reports the config is missing. Idempotent — re-running re-confirms and only rewrites changed keys; never clobbers hand-edited guideline prose.
 ---
 
 # Bootstrap a repo for the agent-skills toolkit
@@ -111,7 +111,7 @@ re-run, leave populated ones untouched). Seed each from what the repo already do
   patterns like `print`/`console`). Seed from the repo's existing guidance; mark gaps with `TODO`.
 - `testing.md` — test conventions (DB/fixture pattern, what may/may not be mocked, isolation,
   assertion expectations). Seed from existing test docs; `TODO` the rest.
-- `invariants.md` — the load-bearing, repo-specific invariants the architecture-audit enforces.
+- `invariants.md` — the load-bearing, repo-specific invariants the audit-architecture enforces.
   **This is the file that most needs a human.** Seed it with a short template and any invariants you
   can extract from `CLAUDE.md`/`AGENTS.md`, but clearly `TODO`-mark it: the audit is only as good as
   the rules listed here.

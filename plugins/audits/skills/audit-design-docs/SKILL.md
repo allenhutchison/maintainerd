@@ -194,7 +194,7 @@ directory may need only drift fixes. Lean toward fewer, denser docs over many th
 - `bootstrap` — generates the `.claude/agent-skills.json` this skill reads.
 - `audit-product-docs` — the sibling that validates user-facing docs (guides, references, READMEs)
   against the code.
-- `architecture-audit` — sweeps the source for tech debt; complements this doc-focused pass.
+- `audit-architecture` — sweeps the source for tech debt; complements this doc-focused pass.
 - `daily-update` — the meta-skill that runs this plus the other per-day housekeeping skills and
   bundles their output into one PR.
 - `create-pr` — used by `daily-update` (or manually) to open the PR once the changes are written.

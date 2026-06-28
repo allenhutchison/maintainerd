@@ -50,7 +50,7 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
     "lint":     "uv run ruff check",            // linter; null if folded into format
     "build":    null,                           // e.g. "npm run build"; null for interpreted repos
     "test":     "uv run pytest",                // the test suite
-    "coverage": "uv run pytest --cov --cov-report=json", // optional; used by test-audit
+    "coverage": "uv run pytest --cov --cov-report=json", // optional; used by audit-tests
     "typecheck": null                           // e.g. "npm run typecheck:test"; null if covered elsewhere
   },
 
@@ -75,17 +75,17 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
 
   // ── GitHub labels ────────────────────────────────────────────────────────
   "labels": {
-    "architecture": "architecture",  // applied to architecture-audit PRs/issues
-    "testQuality":   "test-quality", // applied to test-audit PRs/issues
+    "architecture": "architecture",  // applied to audit-architecture PRs/issues
+    "testQuality":   "test-quality", // applied to audit-tests PRs/issues
     "automated":     "automated"     // applied to anything a skill opens unattended
   },
 
   // ── Per-run caps for the audits (keep review load sustainable) ───────────
   "audits": {
-    "prCap":      3,   // architecture-audit: max PRs opened per run
-    "issueCap":   5,   // architecture-audit: max issues filed per run
-    "testPrCap":  2,   // test-audit: max PRs per run
-    "testIssueCap": 2  // test-audit: max issues per run
+    "prCap":      3,   // audit-architecture: max PRs opened per run
+    "issueCap":   5,   // audit-architecture: max issues filed per run
+    "testPrCap":  2,   // audit-tests: max PRs per run
+    "testIssueCap": 2  // audit-tests: max issues per run
   },
 
   // ── daily-update meta-skill ──────────────────────────────────────────────
@@ -130,7 +130,7 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
 | --- | --- | --- |
 | `repo` | GitHub `owner/name`; passed to every `gh --repo`. | `allenhutchison/pepper` |
 | `defaultBranch` | Branch PRs target; audits `git checkout` it before sweeping. | `main`, `master` |
-| `language` | Selects the language-specific detection rules in `architecture-audit` and `test-audit`. | `python`, `typescript` |
+| `language` | Selects the language-specific detection rules in `audit-architecture` and `audit-tests`. | `python`, `typescript` |
 
 ### `commands`
 
@@ -142,8 +142,8 @@ Each value is a shell command or `null`. A skill that needs a step whose command
 | `format` | create-pr, audits | Non-mutating format check. |
 | `lint` | create-pr, audits | May be `null` if the formatter also lints. |
 | `build` | create-pr, auto-dev | `null` for interpreted languages with no build. |
-| `test` | create-pr, test-audit, auto-dev | The suite that gates PRs. |
-| `coverage` | test-audit | Optional; emits machine-readable coverage. |
+| `test` | create-pr, audit-tests, auto-dev | The suite that gates PRs. |
+| `coverage` | audit-tests | Optional; emits machine-readable coverage. |
 | `typecheck` | create-pr, auto-dev | Optional separate type-check pass. |
 
 ### `paths`
@@ -178,9 +178,9 @@ Long-form, judgment-heavy rules don't belong in JSON. They live in markdown file
 
 | File | Read by | Holds |
 | --- | --- | --- |
-| `coding.md` | `code-review`, `architecture-audit` | The coding standards a senior reviewer enforces here — error-handling conventions, logging (`logger` vs `print`/`console`), typing expectations, naming, banned patterns. |
-| `testing.md` | `test-audit`, `code-review` | Test conventions — the DB/fixture pattern, what may and may not be mocked, isolation rules, assertion expectations, naming. |
-| `invariants.md` | `architecture-audit` | The **load-bearing, repo-specific invariants** that CI doesn't catch. This is the file that replaces the hardcoded repo-specific prose the old per-repo audits carried (e.g. pepper's `app.state` lifespan wiring + `SecretStr` rule; an Obsidian plugin's "use `plugin.logger`, never `console`" + "don't touch the generated-help file"). The audit reads each rule here and checks the diff against it. |
+| `coding.md` | `code-review`, `audit-architecture` | The coding standards a senior reviewer enforces here — error-handling conventions, logging (`logger` vs `print`/`console`), typing expectations, naming, banned patterns. |
+| `testing.md` | `audit-tests`, `code-review` | Test conventions — the DB/fixture pattern, what may and may not be mocked, isolation rules, assertion expectations, naming. |
+| `invariants.md` | `audit-architecture` | The **load-bearing, repo-specific invariants** that CI doesn't catch. This is the file that replaces the hardcoded repo-specific prose the old per-repo audits carried (e.g. pepper's `app.state` lifespan wiring + `SecretStr` rule; an Obsidian plugin's "use `plugin.logger`, never `console`" + "don't touch the generated-help file"). The audit reads each rule here and checks the diff against it. |
 
 A skill that finds a guidelines file missing or still full of `TODO` markers should note that in
 its report (the rule coverage is only as good as these files) and proceed with the

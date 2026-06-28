@@ -16,7 +16,8 @@ skill generates that contract for any repo.
 | --- | --- | --- |
 | **agent-skills-core** | `bootstrap` | Always — it generates the config every other plugin needs. |
 | **repo-ops** | `create-pr`, `code-review`, `daily-changelog`, `daily-update` | You want the baseline PR + changelog dev flow. |
-| **audits** | `architecture-audit`, `test-audit`, `audit-design-docs`, `audit-product-docs`, `research-radar` | You want scheduled tech-debt / test / doc sweeps and a research digest. |
+| **audits** | `audit-architecture`, `audit-tests`, `audit-design-docs`, `audit-product-docs` | You want scheduled tech-debt / test / doc sweeps. |
+| **research** | `research-radar` | You want proactive research surfaced — a periodic arXiv scan for papers relevant to this repo. |
 | **auto-dev** | `auto-dev`, `review-queue` | You want the autonomous issue→PR pipeline. |
 
 A repo installs only the plugins it wants. `auto-dev` works standalone (with `agent-skills-core`
@@ -35,7 +36,7 @@ for config); the audits and repo-ops compose but don't require each other.
 2. **Install the plugins you want**, starting with core:
 
    ```
-   /plugin   # then install agent-skills-core, repo-ops, audits, auto-dev as desired
+   /plugin   # then install agent-skills-core, repo-ops, audits, research, auto-dev as desired
    ```
 
 3. **Generate the config** by running the bootstrap skill in the target repo:
@@ -54,7 +55,7 @@ for config); the audits and repo-ops compose but don't require each other.
      audits should enforce.
 
 4. **Fill in `invariants.md`** — this is the one file that needs real human judgment. It holds
-   the load-bearing, repo-specific rules the architecture-audit checks (e.g. "secrets are
+   the load-bearing, repo-specific rules the audit-architecture checks (e.g. "secrets are
    `SecretStr`", "use `plugin.logger`, never `console`").
 
 5. Commit `.claude/agent-skills.json` and `.claude/guidelines/` to the repo so the skills (and
@@ -81,7 +82,8 @@ agent-skills/
   plugins/
     core/      .claude-plugin/plugin.json  skills/bootstrap/  reference/config-schema.md
     repo-ops/  .claude-plugin/plugin.json  skills/{create-pr,code-review,daily-changelog,daily-update}/
-    audits/    .claude-plugin/plugin.json  skills/{architecture-audit,test-audit,audit-design-docs,audit-product-docs,research-radar}/
+    audits/    .claude-plugin/plugin.json  skills/{audit-architecture,audit-tests,audit-design-docs,audit-product-docs}/
+    research/  .claude-plugin/plugin.json  skills/{research-radar}/
     auto-dev/  .claude-plugin/plugin.json  skills/{auto-dev,review-queue}/
 ```
 

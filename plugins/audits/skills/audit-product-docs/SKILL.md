@@ -231,6 +231,6 @@ review.
 
 - **`audit-design-docs`** — the sibling audit for internal design/architecture docs
   (`config.paths.designDocs`). This skill is its user-facing counterpart.
-- **`architecture-audit`** — sweeps the source for tech debt; the place code-level findings go.
+- **`audit-architecture`** — sweeps the source for tech debt; the place code-level findings go.
 - **`daily-update`** — the meta-skill that may invoke this one and packages the result into a PR.
 - **`create-pr`** — hand off here when the user explicitly wants a PR from the working-tree changes.

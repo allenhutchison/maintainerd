@@ -1,6 +1,6 @@
 ---
-name: test-audit
-description: The repo's test-suite health expert. Reviews the test suite the way a senior staff engineer who cares about test quality would — coverage gaps on critical paths, inappropriate or excessive mocking (mocking what you own, mocks that never assert, asserting on mock internals over behavior), weak or absent assertions, brittle test strategy (testing private implementation, over-pinned arg matchers, golden-snapshot noise), flaky patterns (unfrozen time/randomness, real network, sleeps, order dependence), fixture smells, test duplication that wants parametrization/table-driven cases, rotting skip/xfail, and drift from the repo's own documented test conventions. FIX-FIRST: open one focused PR per mechanically-safe fix; file an issue only for design-heavy test-strategy changes. Scoped to TEST quality only — source-architecture findings are deferred to the `architecture-audit` skill. SILENT ON CLEAN: a run that finds nothing (even nitpicks) produces no PR, no issue, and no report. Built to run unattended several times a day, so dedup is strict and per-run caps are low. Reads the repo's test conventions from `config.guidelines.testing`. Use when the user asks to "audit the tests", "check test quality", "find test smells", "review the test suite", or when invoked by a scheduled remote agent. Has working-tree side effects (branches + PRs) and GitHub side effects (issues, labels).
+name: audit-tests
+description: The repo's test-suite health expert. Reviews the test suite the way a senior staff engineer who cares about test quality would — coverage gaps on critical paths, inappropriate or excessive mocking (mocking what you own, mocks that never assert, asserting on mock internals over behavior), weak or absent assertions, brittle test strategy (testing private implementation, over-pinned arg matchers, golden-snapshot noise), flaky patterns (unfrozen time/randomness, real network, sleeps, order dependence), fixture smells, test duplication that wants parametrization/table-driven cases, rotting skip/xfail, and drift from the repo's own documented test conventions. FIX-FIRST: open one focused PR per mechanically-safe fix; file an issue only for design-heavy test-strategy changes. Scoped to TEST quality only — source-architecture findings are deferred to the `audit-architecture` skill. SILENT ON CLEAN: a run that finds nothing (even nitpicks) produces no PR, no issue, and no report. Built to run unattended several times a day, so dedup is strict and per-run caps are low. Reads the repo's test conventions from `config.guidelines.testing`. Use when the user asks to "audit the tests", "check test quality", "find test smells", "review the test suite", or when invoked by a scheduled remote agent. Has working-tree side effects (branches + PRs) and GitHub side effects (issues, labels).
 ---
 
 # Audit the test suite and fix what's safe to fix
@@ -39,10 +39,10 @@ Treat a `null` command as **"this repo has no such step — skip it, don't inven
 
 ## Scope: tests only
 
-This skill audits **test quality**. It is the sibling of `architecture-audit`, which owns the **source** side (oversized modules, source DRY, source typing, dead exports, source invariants). To avoid two schedulers opening competing PRs:
+This skill audits **test quality**. It is the sibling of `audit-architecture`, which owns the **source** side (oversized modules, source DRY, source typing, dead exports, source invariants). To avoid two schedulers opening competing PRs:
 
 - **In scope:** anything under `config.paths.tests` — the tests themselves, the fixtures, the conftest/setup files, the fakes and test doubles, test helpers, and the *coverage* of `config.paths.source` as measured by the suite.
-- **Out of scope (defer to `architecture-audit`):** refactoring `config.paths.source` for its own sake. The one overlap — "this source module has **zero** tests" — belongs to `architecture-audit`'s missing-tests category; don't duplicate it here. This skill instead improves the *quality* of tests that already exist and closes *coverage gaps within already-tested modules* (the uncovered error path, the unexercised branch).
+- **Out of scope (defer to `audit-architecture`):** refactoring `config.paths.source` for its own sake. The one overlap — "this source module has **zero** tests" — belongs to `audit-architecture`'s missing-tests category; don't duplicate it here. This skill instead improves the *quality* of tests that already exist and closes *coverage gaps within already-tested modules* (the uncovered error path, the unexercised branch).
 - If a test smell can only be fixed by changing source (e.g. code is untestable because a dependency is hard-wired instead of injected), **file an issue** describing the testability problem; don't refactor the source here.
 
 The repo's formatter/linter and the test hook already gate the obvious. Don't re-file what they catch. This skill targets what they can't see: whether a passing test actually tests anything.
@@ -65,7 +65,7 @@ Each category has a default detection method and a default routing decision (PR 
 | **Fixture smells** | Unused fixtures (defined, never requested); fixtures with hidden side effects; suite/session-scoped fixtures holding **mutable** state that can leak across tests; setup duplicated across files that belongs in a shared conftest/setup. | **PR** for unused-fixture deletion; **issue** for scope/leak redesign |
 | **Slow tests** | Run the suite with the runner's slowest-tests report; flag individual tests far above the median (e.g. a unit test taking seconds because it sleeps, hits the network, or rebuilds heavy state per-case). | **Issue** — speeding up usually means restructuring setup |
 | **Repo test-invariant drift** | Read the conventions in `config.guidelines.testing` and **check the suite against each one.** These are the repo's load-bearing test rules CI doesn't enforce — the DB/fixture isolation pattern, fixtures that must mirror a source change (e.g. a new app-state attribute mirrored in the test client fixture), user-facing rendering rules (timezone/locale), teardown that must rely on the rollback rather than be hand-rolled. Flag each violation against the rule as written. | **Issue** — these are load-bearing and the fix often spans setup + tests |
-| **Untestable source (testability smell)** | Surfaced while writing/reading a test: source that can't be tested without mocking because a dependency is constructed inline instead of injected (e.g. a client built inside a function instead of passed in). | **Issue** — the fix is a source change; describe it, don't make it (that's `architecture-audit`/a human's call) |
+| **Untestable source (testability smell)** | Surfaced while writing/reading a test: source that can't be tested without mocking because a dependency is constructed inline instead of injected (e.g. a client built inside a function instead of passed in). | **Issue** — the fix is a source change; describe it, don't make it (that's `audit-architecture`/a human's call) |
 
 The table isn't exhaustive, but every addition must be an **objective, nameable test-quality smell** that obeys the same routing rule and the "Scope: tests only" / "What it does NOT look for" sections — not source review, not subjective style. Concretely, also capture any of:
 
@@ -77,7 +77,7 @@ The table isn't exhaustive, but every addition must be an **objective, nameable 
 - A test coupled to private implementation (asserts on an underscore-prefixed / non-exported attribute or method that isn't part of the contract).
 - A golden-snapshot test whose snapshot is so large or volatile it's noise — it re-blesses on every harmless change and catches nothing.
 
-Route each the same way: mechanical and behavior-preserving → PR, judgment-heavy or reshaping → issue. Anything about *source* goes to `architecture-audit`; anything that's a matter of taste (naming preference, comment density) is out of scope — don't open work for it.
+Route each the same way: mechanical and behavior-preserving → PR, judgment-heavy or reshaping → issue. Anything about *source* goes to `audit-architecture`; anything that's a matter of taste (naming preference, comment density) is out of scope — don't open work for it.
 
 ## Language-specific mechanics
 
@@ -112,7 +112,7 @@ Framework: the repo's test runner (Jest or Vitest — check `config.commands.tes
 
 ## What it does NOT look for
 
-- **Source architecture.** Oversized source modules, source DRY, source typing, dead source exports, source invariants → `architecture-audit`. A source module with **zero** tests is also that skill's call, not this one.
+- **Source architecture.** Oversized source modules, source DRY, source typing, dead source exports, source invariants → `audit-architecture`. A source module with **zero** tests is also that skill's call, not this one.
 - **Formatting / lint.** The repo's formatter/linter owns it (hook + CI). Don't re-file what `config.commands.format` / `config.commands.lint` catch.
 - **Test pass/fail.** The suite is green or this skill shouldn't be running fixes on top of red. If `config.commands.test` is red on a clean `config.defaultBranch`, stop and report that — don't audit on top of a broken suite.
 - **Raising the coverage *number* for its own sake.** Chasing a percentage produces assertion-free tests that exercise lines without proving behavior — the exact anti-pattern this skill exists to remove. Only add coverage where a **real untested behavior/branch** exists and the test would *catch a real regression*.
@@ -139,7 +139,7 @@ The `config.labels.testQuality` label this skill applies must exist. If a fresh 
 
 ```bash
 gh label create <config.labels.testQuality> --repo <config.repo> \
-  --description "Automated test-audit findings (test-suite health)" --color BFD4F2
+  --description "Automated audit-tests findings (test-suite health)" --color BFD4F2
 ```
 
 ### 2. Sweep the categories (fast greps first, coverage last)
@@ -163,7 +163,7 @@ Reading pass (judgment — don't force findings if nothing obvious surfaces):
 Slow pass (run once, near the end):
 
 9. Slow tests — the runner's slowest-tests report.
-10. **Coverage gaps** — run `config.commands.coverage` (skip if `null`), then read its report: for modules that already have tests, find uncovered **branches** / exception arms that represent real untested behavior. (Don't chase whole untested modules — that's `architecture-audit`.)
+10. **Coverage gaps** — run `config.commands.coverage` (skip if `null`), then read its report: for modules that already have tests, find uncovered **branches** / exception arms that represent real untested behavior. (Don't chase whole untested modules — that's `audit-architecture`.)
 
 ### 3. De-duplicate — strict (this runs several times a day)
 
@@ -174,7 +174,7 @@ For each candidate finding, skip it if any of these is true:
 gh pr list --repo <config.repo> --state open --json number,title,headRefName --limit 50
 gh issue list --repo <config.repo> --state open --label <config.labels.testQuality> --json number,title --limit 100
 
-# Don't collide with architecture-audit mid-fix on the same file
+# Don't collide with audit-architecture mid-fix on the same file
 gh pr list --repo <config.repo> --state open --search "head:arch-" --json number,headRefName,files --limit 50
 
 # Don't re-file what a human closed wontfix
@@ -184,7 +184,7 @@ gh issue list --repo <config.repo> --state closed --label <config.labels.testQua
 
 Skip when:
 
-- An open PR with a `test-audit-` branch already addresses this file+category (it may be from a run an hour ago — **the most important dedup, because this skill runs often**).
+- An open PR with a `audit-tests-` branch already addresses this file+category (it may be from a run an hour ago — **the most important dedup, because this skill runs often**).
 - An open `arch-*` PR touches the same test/source file (let it land first; auditing a file mid-flight causes conflicts).
 - An open `config.labels.testQuality` issue already describes it.
 - A human closed the same finding `wontfix` — that's their standing answer; don't refile.
@@ -204,7 +204,7 @@ The cap is low **on purpose** — this runs several times a day; a handful of fo
 For each PR-routed finding, highest-value first:
 
 ```bash
-SLUG="test-audit-<category>-<descriptor>"   # e.g. test-audit-asyncio-marker-cleanup
+SLUG="audit-tests-<category>-<descriptor>"   # e.g. audit-tests-asyncio-marker-cleanup
 git checkout <config.defaultBranch> && git checkout -b "$SLUG"
 ```
 
@@ -235,7 +235,7 @@ PR body:
 ```markdown
 ## Summary
 
-`test-audit` sweep flagged: **<category>** in `<test file>`.
+`audit-tests` sweep flagged: **<category>** in `<test file>`.
 
 <2–3 sentences: what the test smell is, what the fix is, why the test now
 proves more / is less brittle, and why it's behavior-preserving for the code
@@ -285,7 +285,7 @@ don't write the code.>
 
 ---
 
-_Filed by the `test-audit` skill. If this isn't worth doing, close with
+_Filed by the `audit-tests` skill. If this isn't worth doing, close with
 `wontfix` (not-planned) — the skill checks that and won't refile._
 ```
 
@@ -300,8 +300,8 @@ _Filed by the `test-audit` skill. If this isn't worth doing, close with
 Test audit — YYYY-MM-DD
 
 PRs opened:
-- #NNN  test-audit-asyncio-marker-cleanup — drop redundant async markers in 6 files
-- #NNN  test-audit-cov-cap-fallback — cover the cap-fallback branch in <module>
+- #NNN  audit-tests-asyncio-marker-cleanup — drop redundant async markers in 6 files
+- #NNN  audit-tests-cov-cap-fallback — cover the cap-fallback branch in <module>
 
 Issues filed:
 - #NNN  test-quality: tests mock the DB layer instead of using the real test-DB fixture
@@ -320,21 +320,21 @@ A healthy suite produces **0 findings on most runs** — that's the steady state
 
 - **Don't manufacture findings to look busy.** Silence is a valid — and common — outcome. A run with nothing to fix opens nothing. Padding the suite with assertion-free "coverage" tests is the exact debt this skill removes.
 - **Don't chase the coverage number.** Add a test only where it would catch a real regression. A test that exercises a line without asserting on behavior is worse than no test (it gives false confidence and resists refactors).
-- **Don't change production code to fix a test smell.** If the source is untestable, file an issue describing the testability problem; the fix belongs to `architecture-audit` or a human.
+- **Don't change production code to fix a test smell.** If the source is untestable, file an issue describing the testability problem; the fix belongs to `audit-architecture` or a human.
 - **Don't audit on a red suite or a dirty tree.** Both mean "not now" — back off.
-- **Don't re-open a fix that already has an open `test-audit-` PR.** This is the failure mode unique to a high-frequency skill — strict dedup against your own recent PRs is non-negotiable.
-- **Don't collide with `architecture-audit`.** If an `arch-*` PR touches the file, skip it this run.
+- **Don't re-open a fix that already has an open `audit-tests-` PR.** This is the failure mode unique to a high-frequency skill — strict dedup against your own recent PRs is non-negotiable.
+- **Don't collide with `audit-architecture`.** If an `arch-*` PR touches the file, skip it this run.
 - **Don't bundle findings.** One test smell per PR. "Misc test cleanup" is unreviewable.
 - **Don't re-file a `wontfix`.** Check closed-not-planned `config.labels.testQuality` issues first.
 - **Don't auto-merge or `--no-verify`.** Every PR waits for human review; pre-flight always runs.
 
 ## When integrated with scheduling
 
-Schedule this as its own slot (a few times a day is fine given the silent-on-clean + low-cap design), invoking it directly (`/test-audit` or equivalent) — there is no autonomous-prompt variant. It is intentionally **separate** from both `daily-update` (which bundles its work into one PR; this skill opens discrete ones) and `architecture-audit` (which owns the source side). Running both audits is fine; they don't overlap and each dedups against its own label/branch prefix.
+Schedule this as its own slot (a few times a day is fine given the silent-on-clean + low-cap design), invoking it directly (`/audit-tests` or equivalent) — there is no autonomous-prompt variant. It is intentionally **separate** from both `daily-update` (which bundles its work into one PR; this skill opens discrete ones) and `audit-architecture` (which owns the source side). Running both audits is fine; they don't overlap and each dedups against its own label/branch prefix.
 
 ## Related skills
 
-- `architecture-audit` — owns the **source** side (oversized modules, source DRY/typing/dead code, source invariants, and modules with **zero** tests). Anything about source, not tests, goes there.
+- `audit-architecture` — owns the **source** side (oversized modules, source DRY/typing/dead code, source invariants, and modules with **zero** tests). Anything about source, not tests, goes there.
 - `create-pr` — used (if installed) for the PR pre-flight + open in step 5; enforces the repo's gates and PR template.
 - `code-review` — the on-demand reviewer for a specific diff; this skill is the scheduled, test-only sweep.
 - `audit-design-docs` / `audit-product-docs` — the doc-side audits; same FIX-FIRST, capped, dedup-aware shape, different surface.

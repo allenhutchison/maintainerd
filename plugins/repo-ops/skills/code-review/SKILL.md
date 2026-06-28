@@ -50,8 +50,8 @@ Use this skill when:
 
 This skill covers general code-quality review. For repo-specific standards, defer to the guidelines
 files named in `config.guidelines` (loaded above). For structural or tech-debt findings that span
-the codebase, point the user at the **architecture-audit** skill; for test-suite quality concerns
-beyond a single diff, point them at the **test-audit** skill.
+the codebase, point the user at the **audit-architecture** skill; for test-suite quality concerns
+beyond a single diff, point them at the **audit-tests** skill.
 
 ## Review priorities
 
@@ -396,7 +396,7 @@ generics:
 6. **Mocks are minimal**: Only mock what's necessary. Over-mocking makes tests brittle and less valuable.
 
 For a deeper, suite-wide test-quality pass (coverage gaps, mocking strategy, fixture smells, flaky
-patterns), point the user at the **test-audit** skill.
+patterns), point the user at the **audit-tests** skill.
 
 ## Review comment guidelines
 
@@ -414,9 +414,9 @@ Keep this skill focused on the quality of the code under review. For concerns th
 single diff:
 
 - **Structural / tech-debt findings** (oversized files, codebase-wide DRY violations, dead code,
-  weak abstractions) → the **architecture-audit** skill.
+  weak abstractions) → the **audit-architecture** skill.
 - **Test-suite quality** (coverage strategy, mocking patterns, fixtures, flakiness) → the
-  **test-audit** skill.
+  **audit-tests** skill.
 
 ## Further reading
 

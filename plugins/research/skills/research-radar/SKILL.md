@@ -272,5 +272,5 @@ later, mint a `weekly-update` meta-skill on the `daily-update` pattern and move 
 - `create-pr` — opens the PR (runs the repo's gates, enforces the PR template) once the digest is
   written; this skill delegates step 6 to it when installed.
 - `daily-update` — the per-*day* meta-skill; deliberately separate from this weekly job.
-- `architecture-audit` — the other repo-derived scanner; it sweeps the code for tech debt where this
+- `audit-architecture` — the other repo-derived scanner; it sweeps the code for tech debt where this
   one sweeps arXiv for reading.

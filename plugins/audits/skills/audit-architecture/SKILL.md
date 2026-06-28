@@ -1,5 +1,5 @@
 ---
-name: architecture-audit
+name: audit-architecture
 description: Walk the repo's source in the configured language looking for technical debt — oversized files, DRY violations, dead code, missing tests, sloppy typing, weak abstractions, and drift against the repo's documented invariants. Categorize each finding into a discrete unit of work; open a focused PR for mechanically-safe fixes and file a GitHub issue for refactors that need design discussion. One PR or one issue per finding — never bundled. Use when the user asks to "audit the architecture", "find tech debt", "look for code smells", "do an architecture sweep", or when invoked nightly by a scheduled remote agent. Has working-tree side effects (branches + PRs) and GitHub side effects (issues, labels). Quiet-day result is "codebase looks good" with no PR or issue — that's a valid outcome.
 ---
 
@@ -85,7 +85,7 @@ You're not limited to this table — if a senior TypeScript reviewer would flag 
 
 - **Formatting and style.** The formatter owns those (`config.commands.format`, pre-commit hook + CI gate). If formatting drifted, that's a CI bug, not architecture.
 - **Anything the linter already lints.** Those rules are red on every commit (`config.commands.lint`). Don't re-file them — they wouldn't have made it past the hook.
-- **Test pass/fail.** This skill checks test *existence* per subsystem/module, not test quality. Test-suite quality belongs to the **`test-audit`** skill.
+- **Test pass/fail.** This skill checks test *existence* per subsystem/module, not test quality. Test-suite quality belongs to the **`audit-tests`** skill.
 - **Performance.** Micro-optimization isn't tech debt; the skill is about structure, not throughput.
 - **Documentation drift.** The **`audit-design-docs`** skill owns that (and **`audit-product-docs`** owns user-facing docs). If a finding here happens to surface a doc issue too, mention it but don't fix it — the next docs-audit run will.
 - **Security review.** That's `/security-review`'s job.
@@ -226,7 +226,7 @@ gh pr create --repo <config.repo> \
   --body "$(cat <<'EOF'
 ## Summary
 
-architecture-audit nightly sweep flagged: **<category>** in `<file>`.
+audit-architecture nightly sweep flagged: **<category>** in `<file>`.
 
 <2–3 sentences: what the smell is, what the fix is, why it's safe.>
 
@@ -243,7 +243,7 @@ architecture-audit nightly sweep flagged: **<category>** in `<file>`.
 
 ---
 
-_Filed by the `architecture-audit` skill._
+_Filed by the `audit-architecture` skill._
 EOF
 )"
 ```
@@ -282,7 +282,7 @@ move, the tests to add. Don't write the code; describe it.>
 
 ---
 
-_Filed by the `architecture-audit` skill. If this isn't worth doing, close as **Not planned** / `wontfix` — the skill checks closed-not-planned and won't refile._
+_Filed by the `audit-architecture` skill. If this isn't worth doing, close as **Not planned** / `wontfix` — the skill checks closed-not-planned and won't refile._
 EOF
 )"
 ```
@@ -359,6 +359,6 @@ Tune the per-run caps (`config.audits.prCap` / `config.audits.issueCap`) downwar
 
 ## When integrated with scheduling
 
-This skill is **not** part of the `daily-update` meta-skill, because `daily-update` bundles its work into one PR and this skill explicitly opens many. Schedule it as its own slot (e.g. nightly at 2am local time) via the `schedule` skill. The schedule should invoke this skill directly; there is no autonomous-prompt variant — pass a literal `/architecture-audit` or equivalent.
+This skill is **not** part of the `daily-update` meta-skill, because `daily-update` bundles its work into one PR and this skill explicitly opens many. Schedule it as its own slot (e.g. nightly at 2am local time) via the `schedule` skill. The schedule should invoke this skill directly; there is no autonomous-prompt variant — pass a literal `/audit-architecture` or equivalent.
 
 If the user is running short on `/schedule` slots and wants to combine with `daily-update`, the right consolidation is to have this skill run *first*, produce its PRs/issues, and then let `daily-update` run its own one-PR sweep on top — but they remain logically separate runs from the maintainer's point of view.
