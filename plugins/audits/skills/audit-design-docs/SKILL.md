@@ -15,11 +15,11 @@ claim that belongs in user-facing docs, note it for that skill rather than fixin
 
 ## Load the repo config
 
-Before anything else, read `.claude/agent-skills.json` from the repo root (see
+Before anything else, read `.claude/maintainerd.json` from the repo root (see
 [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md) for the full
 contract). If it does not exist, **stop** and tell the user:
 
-> This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+> This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
 Don't guess values or hardcode another repo's settings. The keys this skill needs:
 
@@ -191,7 +191,7 @@ directory may need only drift fixes. Lean toward fewer, denser docs over many th
 
 ## Related skills
 
-- `bootstrap` — generates the `.claude/agent-skills.json` this skill reads.
+- `bootstrap` — generates the `.claude/maintainerd.json` this skill reads.
 - `audit-product-docs` — the sibling that validates user-facing docs (guides, references, READMEs)
   against the code.
 - `audit-architecture` — sweeps the source for tech debt; complements this doc-focused pass.

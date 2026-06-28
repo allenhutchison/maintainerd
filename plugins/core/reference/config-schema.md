@@ -1,13 +1,13 @@
-# The repo config contract: `.claude/agent-skills.json`
+# The repo config contract: `.claude/maintainerd.json`
 
-Every agent-skills skill is **repo-agnostic**. The repo-specific details — slug, branch,
+Every Maintainerd skill is **repo-agnostic**. The repo-specific details — slug, branch,
 language, paths, commands, label names, caps — live in a config file the consuming repo checks
 in. This document is the canonical schema. The `bootstrap` skill generates the file; the other
 skills read it.
 
 There are two halves to the contract:
 
-1. **`.claude/agent-skills.json`** — structured scalars (this document).
+1. **`.claude/maintainerd.json`** — structured scalars (this document).
 2. **`.claude/guidelines/*.md`** — free-form repo rules the skills read as prose (see
    [Guidelines files](#guidelines-files)).
 
@@ -18,9 +18,9 @@ There are two halves to the contract:
 Every skill in this toolkit starts the same way. When a skill says *"load the repo config (see
 config-schema.md)"*, it means exactly this:
 
-1. Read `.claude/agent-skills.json` from the repo root.
+1. Read `.claude/maintainerd.json` from the repo root.
 2. If it does not exist, **stop** and tell the user:
-   > This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+   > This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
    Do not guess values or hardcode another repo's settings.
 3. Read only the keys the skill needs. Treat a `null` command as *"this repo has no such step —
    skip it"* (e.g. a Python repo has `commands.build: null`; don't invent a build step).
@@ -30,7 +30,7 @@ config-schema.md)"*, it means exactly this:
    read the markdown file named in `guidelines.*` rather than relying on built-in assumptions.
 
 Read with whatever is convenient — the `Read` tool, or `jq` for a single value, e.g.
-`jq -r '.defaultBranch' .claude/agent-skills.json`.
+`jq -r '.defaultBranch' .claude/maintainerd.json`.
 
 ---
 

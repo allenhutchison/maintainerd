@@ -21,11 +21,11 @@ internal activity log. Don't touch the user-facing version surface from this ski
 
 ## Load the repo config
 
-Before anything else, read `.claude/agent-skills.json` from the repo root (see
+Before anything else, read `.claude/maintainerd.json` from the repo root (see
 [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md) for the full contract). If it
 does not exist, **stop** and tell the user:
 
-> This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+> This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
 Don't guess values or hardcode another repo's settings. The keys this skill needs:
 
@@ -206,7 +206,7 @@ in all-caps. A few specifics:
 
 ## Related skills
 
-- `bootstrap` — generates the `.claude/agent-skills.json` this skill reads.
+- `bootstrap` — generates the `.claude/maintainerd.json` this skill reads.
 - `daily-update` — the meta-skill that runs this plus the other per-day housekeeping skills and
   bundles their output into one PR.
 - `create-pr` — used by `daily-update` (or manually) to open the PR once the file is written.

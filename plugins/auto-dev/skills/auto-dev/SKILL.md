@@ -1,6 +1,6 @@
 ---
 name: auto-dev
-description: Execute one tick of the autonomous issue-to-PR pipeline — triage open issues for readiness, draft plans for maintainer approval, build the oldest approved issue into a PR, address review feedback; never merges; state lives in configurable auto:* GitHub labels. Designed to run as a recurring scheduled task that invokes this skill directly each tick in a full-toolchain sandbox; also invocable interactively as "/auto-dev" or "run an auto-dev tick", and as "/auto-dev dry-run" for a read-only report of what a tick would do. The auto:* label names, comment marker, and branch prefix are configurable per repo via `.claude/agent-skills.json`.
+description: Execute one tick of the autonomous issue-to-PR pipeline — triage open issues for readiness, draft plans for maintainer approval, build the oldest approved issue into a PR, address review feedback; never merges; state lives in configurable auto:* GitHub labels. Designed to run as a recurring scheduled task that invokes this skill directly each tick in a full-toolchain sandbox; also invocable interactively as "/auto-dev" or "run an auto-dev tick", and as "/auto-dev dry-run" for a read-only report of what a tick would do. The auto:* label names, comment marker, and branch prefix are configurable per repo via `.claude/maintainerd.json`.
 ---
 
 # Auto-dev: one tick of the issue-to-PR pipeline
@@ -12,13 +12,13 @@ This skill automates the path from open issue to reviewed PR while keeping the m
 Before anything else, load the repo config (see
 [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md)):
 
-1. Read `.claude/agent-skills.json` from the repo root.
+1. Read `.claude/maintainerd.json` from the repo root.
 2. If it does not exist, **STOP** and tell the user:
-   > This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+   > This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
    Do not guess values or hardcode another repo's settings.
 3. If `config.autoDev.enabled` is `false`, **STOP** and tell the user:
-   > Auto-dev is disabled for this repo. Set `autoDev.enabled` to `true` in `.claude/agent-skills.json` to use it.
+   > Auto-dev is disabled for this repo. Set `autoDev.enabled` to `true` in `.claude/maintainerd.json` to use it.
 
    Do not run any tick logic, post any comment, or change any label while disabled.
 4. Read the keys this skill needs: `config.repo`, `config.defaultBranch`, `config.commands.*`
@@ -300,4 +300,4 @@ errors: <none | details>
 
 - **review-queue** — the maintainer's daily console for this pipeline: the **human half** of auto-dev. It gathers everything blocked on the maintainer (the open automated PR, plans awaiting approval, questions and park proposals, parked issues, untriaged issues) and feeds their decisions back into the same state machine **as the human** (never with the marker). Use it to approve plans, answer questions, and park/merge.
 - **create-pr** — the PR-creation skill step 3 delegates to when installed (template, CI gates, docs policy).
-- **bootstrap** — generates `.claude/agent-skills.json`, including the `autoDev` block this skill reads.
+- **bootstrap** — generates `.claude/maintainerd.json`, including the `autoDev` block this skill reads.

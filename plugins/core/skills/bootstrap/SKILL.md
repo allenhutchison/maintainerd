@@ -1,14 +1,14 @@
 ---
 name: bootstrap
-description: Generate the agent-skills config contract for a repo — write `.claude/agent-skills.json` and scaffold `.claude/guidelines/{coding,testing,invariants}.md` so the repo-ops, audits, research, and auto-dev skills can run here. Inspects the repo (language, GitHub slug, default branch, source/test dirs, lint/format/build/test commands), confirms anything ambiguous, and seeds starter guidelines from existing CLAUDE.md/AGENTS.md. Use when the user asks to "bootstrap this repo", "set up agent-skills", "create the agent-skills config", "configure the maintainer skills", "onboard this repo to agent-skills", or when any other agent-skills skill reports the config is missing. Idempotent — re-running re-confirms and only rewrites changed keys; never clobbers hand-edited guideline prose.
+description: Generate the maintainerd config contract for a repo — write `.claude/maintainerd.json` and scaffold `.claude/guidelines/{coding,testing,invariants}.md` so the repo-ops, audits, research, and auto-dev skills can run here. Inspects the repo (language, GitHub slug, default branch, source/test dirs, lint/format/build/test commands), confirms anything ambiguous, and seeds starter guidelines from existing CLAUDE.md/AGENTS.md. Use when the user asks to "bootstrap this repo", "set up maintainerd", "create the maintainerd config", "configure the maintainer skills", "onboard this repo to maintainerd", or when any other maintainerd skill reports the config is missing. Idempotent — re-running re-confirms and only rewrites changed keys; never clobbers hand-edited guideline prose.
 ---
 
-# Bootstrap a repo for the agent-skills toolkit
+# Bootstrap a repo for the Maintainerd toolkit
 
-This skill writes the **config contract** that every other agent-skills skill reads. After it
+This skill writes the **config contract** that every other Maintainerd skill reads. After it
 runs, the repo has:
 
-- `.claude/agent-skills.json` — structured config (schema in
+- `.claude/maintainerd.json` — structured config (schema in
   [`../../reference/config-schema.md`](../../reference/config-schema.md)).
 - `.claude/guidelines/coding.md`, `testing.md`, `invariants.md` — free-form rule files the audits
   and code-review read.
@@ -25,7 +25,7 @@ Every key you write must match it.
 ### 1. Detect whether this is a re-run
 
 ```bash
-cat .claude/agent-skills.json 2>/dev/null
+cat .claude/maintainerd.json 2>/dev/null
 ```
 
 - **Exists** → this is an update. Read it, keep every value the user has set, and only re-confirm
@@ -94,11 +94,11 @@ Defaults to apply without asking (state them in the report):
 - `autoDev` label names: the `auto:*` set from the schema.
 - `autoDev.excludedLabels`: `["epic", "question", "wontfix", "duplicate", "invalid"]`.
 
-Write `.claude/agent-skills.json` with the full schema. Every command the repo doesn't have must be
+Write `.claude/maintainerd.json` with the full schema. Every command the repo doesn't have must be
 explicit `null`, not omitted. Validate it parses:
 
 ```bash
-jq . .claude/agent-skills.json >/dev/null && echo "config valid"
+jq . .claude/maintainerd.json >/dev/null && echo "config valid"
 ```
 
 ### 6. Scaffold the guidelines files
@@ -131,7 +131,7 @@ The labels in the config must exist in GitHub for the audits and auto-dev to app
 ```bash
 gh label create architecture --color BFD4F2 --description "Architecture-audit findings" 2>/dev/null || true
 gh label create test-quality --color D4C5F9 --description "Test-audit findings" 2>/dev/null || true
-gh label create automated    --color EDEDED --description "Opened by an agent-skills skill" 2>/dev/null || true
+gh label create automated    --color EDEDED --description "Opened by a Maintainerd skill" 2>/dev/null || true
 # auto:* labels only if auto-dev is enabled
 ```
 
@@ -145,7 +145,7 @@ Tell the user, concisely:
   high-blast-radius ones).
 - Which guideline files were created vs left alone, and that **`invariants.md` needs human review**.
 - Whether labels / PR template were created or skipped.
-- The reminder to **commit `.claude/agent-skills.json` and `.claude/guidelines/`** so scheduled
+- The reminder to **commit `.claude/maintainerd.json` and `.claude/guidelines/`** so scheduled
   cloud agents pick them up.
 
 ## What not to do

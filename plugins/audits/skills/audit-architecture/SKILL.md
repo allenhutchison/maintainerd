@@ -13,9 +13,9 @@ The skill is **deliberately conservative**: it caps the number of PRs and issues
 
 Before doing anything else, load the repo config (see [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md)):
 
-1. Read `.claude/agent-skills.json` from the repo root.
+1. Read `.claude/maintainerd.json` from the repo root.
 2. **If it does not exist, STOP** and tell the user:
-   > This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+   > This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
    Do not guess values or hardcode another repo's settings.
 3. Read the keys this skill uses: `config.repo`, `config.defaultBranch`, `config.language`, `config.paths.source`, `config.paths.tests`, `config.paths.skillsDir`, `config.commands.format`/`lint`/`build`/`test`, `config.guidelines.invariants`, `config.guidelines.coding`, `config.labels.architecture`, `config.labels.automated`, `config.audits.prCap`, `config.audits.issueCap`. Treat any `null` command as *"this repo has no such step — skip it"*. For any key that is **absent**, fall back to the documented default (caps default to 3 PRs / 5 issues) and mention the fallback in your run report.

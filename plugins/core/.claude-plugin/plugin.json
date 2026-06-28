@@ -1,7 +1,7 @@
 {
-  "name": "agent-skills-core",
+  "name": "maintainerd-core",
   "version": "0.1.0",
-  "description": "Foundation for the agent-skills maintainer toolkit. Ships the bootstrap skill that generates a repo's .claude/agent-skills.json config contract and starter guidelines, plus the canonical config schema reference that every other agent-skills plugin reads.",
+  "description": "Foundation for the maintainerd maintainer toolkit. Ships the bootstrap skill that generates a repo's .claude/maintainerd.json config contract and starter guidelines, plus the canonical config schema reference that every other maintainerd plugin reads.",
   "author": {
     "name": "Allen Hutchison",
     "url": "https://github.com/allenhutchison"

@@ -21,11 +21,11 @@ from the human side; it never duplicates the machine's own work (it does not tri
 
 ## Load the repo config
 
-Before anything else, read `.claude/agent-skills.json` from the repo root (see
+Before anything else, read `.claude/maintainerd.json` from the repo root (see
 [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md) for the full
 contract). If it does not exist, **stop** and tell the user:
 
-> This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+> This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
 Don't guess values or hardcode another repo's settings. If `config.autoDev.enabled` is `false`,
 **stop** and tell the user that the auto-dev / review-queue pipeline is disabled for this repo. The
@@ -263,5 +263,5 @@ you later.
 - **auto-dev** — the automated half of this pipeline (the cron-driven triage → plan → build →
   address-review machine). It owns the `auto:*` state machine and the comment-classification
   conventions this skill drives.
-- **bootstrap** — generates `.claude/agent-skills.json`, including the `config.autoDev` block this
+- **bootstrap** — generates `.claude/maintainerd.json`, including the `config.autoDev` block this
   skill reads.

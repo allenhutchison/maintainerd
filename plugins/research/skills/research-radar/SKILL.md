@@ -29,9 +29,9 @@ matters to *us*" — a subsystem it informs, a problem we're fighting, an open i
 Before anything else, load the repo config (see
 [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md)):
 
-1. Read `.claude/agent-skills.json` from the repo root.
+1. Read `.claude/maintainerd.json` from the repo root.
 2. If it does not exist, **STOP** and tell the user:
-   > This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+   > This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
    Do not guess values or hardcode another repo's settings.
 3. Read the keys this skill needs:
@@ -268,7 +268,7 @@ later, mint a `weekly-update` meta-skill on the `daily-update` pattern and move 
 
 ## Related skills
 
-- `bootstrap` — generates the `.claude/agent-skills.json` this skill reads.
+- `bootstrap` — generates the `.claude/maintainerd.json` this skill reads.
 - `create-pr` — opens the PR (runs the repo's gates, enforces the PR template) once the digest is
   written; this skill delegates step 6 to it when installed.
 - `daily-update` — the per-*day* meta-skill; deliberately separate from this weekly job.

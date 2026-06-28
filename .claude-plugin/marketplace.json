@@ -1,20 +1,20 @@
 {
-  "name": "agent-skills",
+  "name": "maintainerd",
   "owner": {
     "name": "Allen Hutchison",
     "url": "https://github.com/allenhutchison"
   },
   "plugins": [
     {
-      "name": "agent-skills-core",
+      "name": "maintainerd-core",
       "source": "./plugins/core",
-      "description": "Foundation: the bootstrap skill that generates a repo's .claude/agent-skills.json config contract, plus the canonical config schema every other plugin reads. Install this first.",
+      "description": "Foundation: the bootstrap skill that generates a repo's .claude/maintainerd.json config contract, plus the canonical config schema every other plugin reads. Install this first.",
       "version": "0.1.0"
     },
     {
       "name": "repo-ops",
       "source": "./plugins/repo-ops",
-      "description": "Baseline maintainer dev flow: create-pr (pre-flight-gated PRs), code-review, daily-changelog, and the daily-update meta-skill. Config-driven via .claude/agent-skills.json.",
+      "description": "Baseline maintainer dev flow: create-pr (pre-flight-gated PRs), code-review, daily-changelog, and the daily-update meta-skill. Config-driven via .claude/maintainerd.json.",
       "version": "0.1.0"
     },
     {

@@ -17,9 +17,9 @@ Two properties make this skill safe to schedule several times a day:
 Before anything else, load the repo config (see
 [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md)):
 
-1. Read `.claude/agent-skills.json` from the repo root.
+1. Read `.claude/maintainerd.json` from the repo root.
 2. If it does not exist, **STOP** and tell the user:
-   > This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+   > This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
    Do not guess values or hardcode another repo's settings.
 3. Read the keys this skill needs:
@@ -314,7 +314,7 @@ Pre-flight abandoned (unrelated failure): <branch> — <reason>
 
 A healthy suite produces **0 findings on most runs** — that's the steady state, and silence is the correct output. An occasional run surfaces 1–2 real test smells; fix them and move on. A run that surfaces >8 means test debt has accumulated (a feature shipped with thin tests, a big mock-heavy module landed) — note it in the report and let the maintainer decide whether to schedule a focused test-hardening pass.
 
-**Threshold/cadence tuning.** Because it runs several times a day, the `config.audits.testPrCap` / `config.audits.testIssueCap` caps are deliberately tight. Don't raise them to "catch up" — the trickle is the point. If reviewers report even 2/run is too much, lower the caps in `.claude/agent-skills.json`, or reduce the schedule frequency. Tune the caps in the config (not in this file) so future runs pick them up.
+**Threshold/cadence tuning.** Because it runs several times a day, the `config.audits.testPrCap` / `config.audits.testIssueCap` caps are deliberately tight. Don't raise them to "catch up" — the trickle is the point. If reviewers report even 2/run is too much, lower the caps in `.claude/maintainerd.json`, or reduce the schedule frequency. Tune the caps in the config (not in this file) so future runs pick them up.
 
 ## What not to do
 
@@ -338,4 +338,4 @@ Schedule this as its own slot (a few times a day is fine given the silent-on-cle
 - `create-pr` — used (if installed) for the PR pre-flight + open in step 5; enforces the repo's gates and PR template.
 - `code-review` — the on-demand reviewer for a specific diff; this skill is the scheduled, test-only sweep.
 - `audit-design-docs` / `audit-product-docs` — the doc-side audits; same FIX-FIRST, capped, dedup-aware shape, different surface.
-- `bootstrap` — generates the `.claude/agent-skills.json` and `config.guidelines.testing` this skill reads.
+- `bootstrap` — generates the `.claude/maintainerd.json` and `config.guidelines.testing` this skill reads.

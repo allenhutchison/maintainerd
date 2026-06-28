@@ -17,9 +17,9 @@ description: >-
 Before reviewing anything, load the repo config (see
 [`../../../core/reference/config-schema.md`](../../../core/reference/config-schema.md)):
 
-1. Read `.claude/agent-skills.json` from the repo root.
+1. Read `.claude/maintainerd.json` from the repo root.
 2. If it does not exist, **stop** and tell the user:
-   > This repo has no `.claude/agent-skills.json`. Run `/bootstrap` to generate it, then re-run me.
+   > This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
    Do not guess values or hardcode another repo's standards.
 3. From it, you need `config.language` (selects which language-specific guidance below applies) and
    the guideline pointers `config.guidelines.coding` and `config.guidelines.testing`.
