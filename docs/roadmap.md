@@ -40,7 +40,6 @@ suite's scope coherent.
 | --- | --- | --- | --- |
 | `release` | ♻️ Extract | `release-process` in both repos | Version bump → promote the daily changelog into versioned release notes → tag → GitHub release → verify. The "ship a version" counterpart to `daily-changelog`'s "record a day." |
 | `address-review` | ♻️ Extract | `coderabbit-review` (global) | The review-response loop: fetch every thread (CodeRabbit / Gemini / human) → classify → fix real ones (one commit each) → reply to every thread → wait for the next round. Closes the PR lifecycle alongside `create-pr`. |
-| `triage-issues` | ♻️ Extract | `triage-issues` in obsidian-gemini | Label unlabeled issues via `gh`. Conservative — never closes or reassigns, only adds existing labels. Could also live in a dedicated `issues` plugin. |
 
 ## audits candidates (capped, silent-on-clean findings)
 
@@ -58,6 +57,18 @@ suite's scope coherent.
 | `deep-research` | ♻️ Extract | `deep-research` (global) | The fan-out → fetch → adversarially-verify → cited-report harness. Drops straight into `research`. |
 | `prior-art` | ✨ Net-new | — | GitHub/code search for similar implementations, competing libraries, or existing solutions before you build. Natural feeder into `auto-dev`'s planning step. |
 | `dependency-watch` | ✨ Net-new | — | Track upstream changelogs and *coming* breaking changes in deps you actually use (distinct from `audit-deps`'s "what's stale right now"). |
+
+## issues candidates (intake → pipeline-ready)
+
+The job of these is to get well-formed, buildable issues *into* the repo so the `auto-dev`
+pipeline has good raw material — vague, underspecified issues are the main thing that makes an
+autonomous builder waste a cycle or go sideways. They'd ship in the `auto-dev` plugin, or a small
+dedicated `issues` plugin.
+
+| Skill | Status | Source | What it does |
+| --- | --- | --- | --- |
+| `create-issue` | ✨ Net-new | — | Turn a rough request ("X is broken", "we should add Y") into a GitHub issue that's **ready for `auto-dev`**. Takes the user's input, then **either investigates the codebase** to isolate the affected files / likely root cause / repro steps, **or asks targeted clarifying questions** when the ask is underspecified — then writes an issue with a crisp problem statement, acceptance criteria, and concrete pointers (files/symbols/commands). Labels it per `config.autoDev.stateLabels` so it lands in the pipeline at the right state (entering triage by default, or `auto:ready` when the user is confident), and respects `config.autoDev.excludedLabels`. The front-door companion to the whole pipeline. |
+| `triage-issues` | ♻️ Extract | `triage-issues` in obsidian-gemini | Label unlabeled issues via `gh`. Conservative — never closes or reassigns, only adds existing labels. |
 
 ## auto-dev candidates
 
@@ -117,3 +128,7 @@ source to extract from:
 
 Plus `worklog` (♻️) as the first skill in the new `journal` category, pending the user-vs-repo
 config decision above.
+
+And whenever the `auto-dev` rollout happens, pull in `create-issue` (✨) alongside it — a pipeline
+is only as good as the issues fed into it, and `create-issue` is the front-door that keeps them
+well-formed and buildable.
