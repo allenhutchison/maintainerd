@@ -28,13 +28,16 @@
   "labels": {
     "architecture": "architecture",
     "testQuality": "test-quality",
+    "security": "security",
     "automated": "automated"
   },
   "audits": {
     "prCap": 3,
     "issueCap": 5,
     "testPrCap": 2,
-    "testIssueCap": 2
+    "testIssueCap": 2,
+    "securityPrCap": 3,
+    "securityIssueCap": 5
   },
   "dailyUpdate": {
     "subSkills": ["daily-changelog", "audit-design-docs"],

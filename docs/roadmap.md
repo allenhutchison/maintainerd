@@ -28,7 +28,7 @@ suite's scope coherent.
 | --- | --- |
 | `maintainerd-core` | `bootstrap` |
 | `repo-ops` | `create-pr`, `address-review`, `code-review`, `daily-changelog`, `daily-update` |
-| `audits` | `audit-architecture`, `audit-tests`, `audit-design-docs`, `audit-product-docs` |
+| `audits` | `audit-architecture`, `audit-tests`, `audit-security`, `audit-design-docs`, `audit-product-docs` |
 | `research` | `research-radar` |
 | `auto-dev` | `auto-dev`, `review-queue` |
 
@@ -45,7 +45,7 @@ suite's scope coherent.
 
 | Skill | Status | Source | What it does |
 | --- | --- | --- | --- |
-| `audit-security` | ✨ Net-new | wraps `/security-review` | Dependency CVEs, secret scanning, dangerous patterns (injection, unsafe deserialization, shelling out with user input). The most obviously-missing audit. |
+| ~~`audit-security`~~ | ✅ **Shipped** | new (complements `/security-review`) | Whole-tree + dependency sweep: vulnerable deps (CVEs), committed secrets, dangerous patterns (injection, unsafe deserialization, shelling out with user input). Severity-ranked; honest about scanner coverage (missing tool → "not scanned", never "clean"); safe secret handling (redact + alert, never auto-delete). Distinct from `/security-review`'s branch-diff scope. |
 | `audit-deps` | ✨ Net-new | — | Outdated / deprecated / unused dependencies, lockfile drift, license issues. Highly generalizable — the config already names the ecosystem (`language`, commands). |
 | `audit-todos` | ✨ Net-new | — | Sweep `TODO`/`FIXME`/`HACK`/`XXX`, age them against blame, and file issues for stale ones. Lightweight, language-agnostic, satisfying. |
 | `audit-config` | ✨ Net-new | — | Meta-maintenance of the plumbing: validate CI workflows, `.env.example` ↔ real settings sync, schedule definitions, and the repo's own `maintainerd.json`/guidelines health. |
@@ -124,13 +124,12 @@ per-repo pointer. The canonical `config-schema.md` gains a "User-level config" s
 
 ## Suggested v0.2 batch
 
-Closes the loop *bootstrap → build → review → ship → keep-healthy*. `address-review` is done (✅);
-the rest:
+Closes the loop *bootstrap → build → review → ship → keep-healthy*. `address-review` and
+`audit-security` are done (✅); the rest:
 
 1. `release` (♻️)
-2. `audit-security` (✨)
-3. `audit-deps` (✨)
-4. `doctor` (✨)
+2. `audit-deps` (✨)
+3. `doctor` (✨)
 
 Plus `worklog` (♻️) as the first skill in the new `journal` category — its config home is now
 settled (user-level `~/.claude/maintainerd.json`; see the journal section above).

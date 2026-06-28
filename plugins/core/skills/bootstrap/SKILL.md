@@ -89,7 +89,7 @@ they installed (so the `dailyUpdate.subSkills` roster lists only real skills), w
 `enabled`, label names if they differ from the defaults, and the research-radar `userAgent` email.
 
 Defaults to apply without asking (state them in the report):
-- `labels`: `architecture` / `test-quality` / `automated`.
+- `labels`: `architecture` / `test-quality` / `security` / `automated`.
 - `audits`: `3 / 5 / 2 / 2`.
 - `autoDev` label names: the `auto:*` set from the schema.
 - `autoDev.excludedLabels`: `["epic", "question", "wontfix", "duplicate", "invalid"]`.
@@ -129,8 +129,9 @@ If `paths.prTemplate` points at a file that doesn't exist, offer to create a min
 The labels in the config must exist in GitHub for the audits and auto-dev to apply them. Offer:
 
 ```bash
-gh label create architecture --color BFD4F2 --description "Architecture-audit findings" 2>/dev/null || true
-gh label create test-quality --color D4C5F9 --description "Test-audit findings" 2>/dev/null || true
+gh label create architecture --color BFD4F2 --description "audit-architecture findings" 2>/dev/null || true
+gh label create test-quality --color D4C5F9 --description "audit-tests findings" 2>/dev/null || true
+gh label create security     --color D93F0B --description "audit-security findings" 2>/dev/null || true
 gh label create automated    --color EDEDED --description "Opened by a Maintainerd skill" 2>/dev/null || true
 # auto:* labels only if auto-dev is enabled
 ```

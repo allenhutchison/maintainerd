@@ -77,6 +77,7 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
   "labels": {
     "architecture": "architecture",  // applied to audit-architecture PRs/issues
     "testQuality":   "test-quality", // applied to audit-tests PRs/issues
+    "security":      "security",     // applied to audit-security PRs/issues
     "automated":     "automated"     // applied to anything a skill opens unattended
   },
 
@@ -85,7 +86,9 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
     "prCap":      3,   // audit-architecture: max PRs opened per run
     "issueCap":   5,   // audit-architecture: max issues filed per run
     "testPrCap":  2,   // audit-tests: max PRs per run
-    "testIssueCap": 2  // audit-tests: max issues per run
+    "testIssueCap": 2, // audit-tests: max issues per run
+    "securityPrCap":    3, // audit-security: max PRs per run
+    "securityIssueCap": 5  // audit-security: max issues per run (Critical/High over cap still reported)
   },
 
   // ── daily-update meta-skill ──────────────────────────────────────────────
@@ -168,7 +171,8 @@ Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
 
 - `labels.*` — GitHub label names the skills apply. They must already exist in the repo (bootstrap
   offers to create them).
-- `audits.*` — per-run caps. Defaults `3/5` (architecture) and `2/2` (test) if absent.
+- `audits.*` — per-run caps. Defaults `3/5` (architecture), `2/2` (test), and `3/5` (security) if
+  absent. `audit-security` still *reports* Critical/High findings that exceed its cap.
 - `dailyUpdate.subSkills` — the ordered roster `daily-update` runs. **Only list skills that are
   actually installed in this repo**, or `daily-update` will try to invoke a missing skill.
   `{date}` in `commitSubject` is replaced with the ISO date.
