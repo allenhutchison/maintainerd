@@ -1,0 +1,90 @@
+# agent-skills
+
+A Claude Code plugin marketplace of **config-driven maintainer skills** — the nightly
+audits, daily changelog, doc validation, PR flow, and autonomous issue→PR pipeline that a
+solo maintainer wants on every repo, extracted so they live in one place instead of being
+copy-pasted (and drifting) across projects.
+
+Every skill reads a small per-repo config contract — `.claude/agent-skills.json` plus a few
+`.claude/guidelines/*.md` files — checked into the consuming repo. The same skill runs
+unchanged in a Python repo and a TypeScript repo; only the config differs. The `bootstrap`
+skill generates that contract for any repo.
+
+## Plugins
+
+| Plugin | Skills | Install when |
+| --- | --- | --- |
+| **agent-skills-core** | `bootstrap` | Always — it generates the config every other plugin needs. |
+| **repo-ops** | `create-pr`, `code-review`, `daily-changelog`, `daily-update` | You want the baseline PR + changelog dev flow. |
+| **audits** | `architecture-audit`, `test-audit`, `audit-design-docs`, `audit-product-docs`, `research-radar` | You want scheduled tech-debt / test / doc sweeps and a research digest. |
+| **auto-dev** | `auto-dev`, `review-queue` | You want the autonomous issue→PR pipeline. |
+
+A repo installs only the plugins it wants. `auto-dev` works standalone (with `agent-skills-core`
+for config); the audits and repo-ops compose but don't require each other.
+
+## Setup in a new repo
+
+1. **Add the marketplace** (once per machine):
+
+   ```bash
+   claude plugin marketplace add allenhutchison/agent-skills
+   # or, for local development:
+   claude plugin marketplace add /Users/allen/src/agent-skills
+   ```
+
+2. **Install the plugins you want**, starting with core:
+
+   ```
+   /plugin   # then install agent-skills-core, repo-ops, audits, auto-dev as desired
+   ```
+
+3. **Generate the config** by running the bootstrap skill in the target repo:
+
+   ```
+   /bootstrap
+   ```
+
+   It inspects the repo (language, repo slug, default branch, source/test dirs, lint/test
+   commands), confirms anything ambiguous with you, and writes:
+
+   - `.claude/agent-skills.json` — the structured config (see
+     [`plugins/core/reference/config-schema.md`](plugins/core/reference/config-schema.md)).
+   - `.claude/guidelines/coding.md`, `testing.md`, `invariants.md` — starter guideline files
+     seeded from your `CLAUDE.md`/`AGENTS.md`, with TODOs for the repo-specific invariants the
+     audits should enforce.
+
+4. **Fill in `invariants.md`** — this is the one file that needs real human judgment. It holds
+   the load-bearing, repo-specific rules the architecture-audit checks (e.g. "secrets are
+   `SecretStr`", "use `plugin.logger`, never `console`").
+
+5. Commit `.claude/agent-skills.json` and `.claude/guidelines/` to the repo so the skills (and
+   any scheduled cloud agents) pick them up.
+
+## How the config contract works
+
+- **Structured scalars → JSON.** Repo slug, default branch, language, source/test/doc paths,
+  lint/format/build/test commands, label names, per-run caps, the daily-update roster, and the
+  `auto:*` state-machine label names all live in `.claude/agent-skills.json`.
+- **Free-form repo rules → markdown.** Coding standards, test conventions, and load-bearing
+  invariants live in `.claude/guidelines/*.md`, which the skills read at runtime. This keeps the
+  JSON scannable and lets the prose diff cleanly.
+
+Every skill begins by reading `.claude/agent-skills.json`; if it's missing, the skill tells you
+to run `/bootstrap`. The canonical schema and the shared "read your repo config" preamble live in
+[`plugins/core/reference/config-schema.md`](plugins/core/reference/config-schema.md).
+
+## Repository layout
+
+```
+agent-skills/
+  .claude-plugin/marketplace.json
+  plugins/
+    core/      .claude-plugin/plugin.json  skills/bootstrap/  reference/config-schema.md
+    repo-ops/  .claude-plugin/plugin.json  skills/{create-pr,code-review,daily-changelog,daily-update}/
+    audits/    .claude-plugin/plugin.json  skills/{architecture-audit,test-audit,audit-design-docs,audit-product-docs,research-radar}/
+    auto-dev/  .claude-plugin/plugin.json  skills/{auto-dev,review-queue}/
+```
+
+## License
+
+MIT

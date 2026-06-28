@@ -1,0 +1,33 @@
+{
+  "name": "agent-skills",
+  "owner": {
+    "name": "Allen Hutchison",
+    "url": "https://github.com/allenhutchison"
+  },
+  "plugins": [
+    {
+      "name": "agent-skills-core",
+      "source": "./plugins/core",
+      "description": "Foundation: the bootstrap skill that generates a repo's .claude/agent-skills.json config contract, plus the canonical config schema every other plugin reads. Install this first.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "repo-ops",
+      "source": "./plugins/repo-ops",
+      "description": "Baseline maintainer dev flow: create-pr (pre-flight-gated PRs), code-review, daily-changelog, and the daily-update meta-skill. Config-driven via .claude/agent-skills.json.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "audits",
+      "source": "./plugins/audits",
+      "description": "Scheduled findings + digests that open PRs/issues: architecture-audit, test-audit, audit-design-docs, audit-product-docs, research-radar. Language and rules come from the repo config + guidelines files.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "auto-dev",
+      "source": "./plugins/auto-dev",
+      "description": "Autonomous issue-to-PR pipeline driven by an auto:* GitHub label state machine, plus review-queue, the maintainer's console for it. Configurable label names, markers, and branch prefixes.",
+      "version": "0.1.0"
+    }
+  ]
+}

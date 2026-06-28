@@ -1,0 +1,11 @@
+{
+  "name": "repo-ops",
+  "version": "0.1.0",
+  "description": "Baseline maintainer dev flow as config-driven skills: create-pr (opens PRs only after running the repo's format/lint/build/test pre-flight), code-review, daily-changelog (one markdown file per day from merged PRs), and daily-update (runs the repo's per-day housekeeping skills and bundles their output into one PR). Reads .claude/agent-skills.json.",
+  "author": {
+    "name": "Allen Hutchison",
+    "url": "https://github.com/allenhutchison"
+  },
+  "license": "MIT",
+  "keywords": ["pull-request", "changelog", "code-review", "automation", "maintainer"]
+}

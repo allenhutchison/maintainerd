@@ -1,0 +1,63 @@
+{
+  "repo": "allenhutchison/obsidian-gemini",
+  "defaultBranch": "master",
+  "language": "typescript",
+  "commands": {
+    "format": "npm run format-check",
+    "lint": null,
+    "build": "npm run build",
+    "test": "npm test",
+    "coverage": "npm test -- --coverage",
+    "typecheck": "npm run typecheck:test"
+  },
+  "paths": {
+    "source": "src/",
+    "tests": "test/",
+    "designDocs": ["docs/contributing/"],
+    "productDocs": ["docs/guide/", "docs/reference/", "README.md", "AGENTS.md"],
+    "changelogDir": "planning/changelog/",
+    "researchRadarDir": "planning/research-radar/",
+    "prTemplate": ".github/PULL_REQUEST_TEMPLATE.md",
+    "skillsDir": ".agents/skills/"
+  },
+  "guidelines": {
+    "coding": ".claude/guidelines/coding.md",
+    "testing": ".claude/guidelines/testing.md",
+    "invariants": ".claude/guidelines/invariants.md"
+  },
+  "labels": {
+    "architecture": "architecture",
+    "testQuality": "test-quality",
+    "automated": "automated"
+  },
+  "audits": {
+    "prCap": 3,
+    "issueCap": 5,
+    "testPrCap": 2,
+    "testIssueCap": 2
+  },
+  "dailyUpdate": {
+    "subSkills": ["daily-changelog", "audit-product-docs", "triage-issues"],
+    "branchPrefix": "daily-update-",
+    "commitSubject": "chore(daily): {date} daily update"
+  },
+  "autoDev": {
+    "enabled": true,
+    "branchPrefix": "auto/issue-",
+    "marker": "<!-- auto-dev -->",
+    "stateLabels": {
+      "needsInfo": "auto:needs-info",
+      "planned": "auto:planned",
+      "ready": "auto:ready",
+      "inProgress": "auto:in-progress",
+      "parked": "auto:parked",
+      "skip": "auto:skip"
+    },
+    "excludedLabels": ["epic", "question", "wontfix", "duplicate", "invalid"],
+    "openPrsAsDraft": true
+  },
+  "researchRadar": {
+    "themes": "derive",
+    "userAgent": "research-radar/1.0 (mailto:allen@hutchison.org)"
+  }
+}

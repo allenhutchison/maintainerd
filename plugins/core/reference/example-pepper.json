@@ -1,0 +1,63 @@
+{
+  "repo": "allenhutchison/pepper",
+  "defaultBranch": "main",
+  "language": "python",
+  "commands": {
+    "format": "uv run ruff format --check",
+    "lint": "uv run ruff check",
+    "build": null,
+    "test": "uv run pytest",
+    "coverage": "uv run pytest --cov --cov-report=json",
+    "typecheck": null
+  },
+  "paths": {
+    "source": "src/pepper/",
+    "tests": "tests/",
+    "designDocs": ["planning/"],
+    "productDocs": ["docs/", "README.md", "CLAUDE.md"],
+    "changelogDir": "planning/release-notes/",
+    "researchRadarDir": "planning/research-radar/",
+    "prTemplate": ".github/PULL_REQUEST_TEMPLATE.md",
+    "skillsDir": ".claude/skills/"
+  },
+  "guidelines": {
+    "coding": ".claude/guidelines/coding.md",
+    "testing": ".claude/guidelines/testing.md",
+    "invariants": ".claude/guidelines/invariants.md"
+  },
+  "labels": {
+    "architecture": "architecture",
+    "testQuality": "test-quality",
+    "automated": "automated"
+  },
+  "audits": {
+    "prCap": 3,
+    "issueCap": 5,
+    "testPrCap": 2,
+    "testIssueCap": 2
+  },
+  "dailyUpdate": {
+    "subSkills": ["daily-changelog", "audit-design-docs"],
+    "branchPrefix": "daily-update-",
+    "commitSubject": "Daily update — {date}"
+  },
+  "autoDev": {
+    "enabled": false,
+    "branchPrefix": "auto/issue-",
+    "marker": "<!-- auto-dev -->",
+    "stateLabels": {
+      "needsInfo": "auto:needs-info",
+      "planned": "auto:planned",
+      "ready": "auto:ready",
+      "inProgress": "auto:in-progress",
+      "parked": "auto:parked",
+      "skip": "auto:skip"
+    },
+    "excludedLabels": ["epic", "question", "wontfix", "duplicate", "invalid"],
+    "openPrsAsDraft": true
+  },
+  "researchRadar": {
+    "themes": "derive",
+    "userAgent": "research-radar/1.0 (mailto:allen@hutchison.org)"
+  }
+}
