@@ -29,6 +29,7 @@
     "architecture": "architecture",
     "testQuality": "test-quality",
     "security": "security",
+    "dependencies": "dependencies",
     "automated": "automated"
   },
   "audits": {
@@ -37,7 +38,9 @@
     "testPrCap": 2,
     "testIssueCap": 2,
     "securityPrCap": 3,
-    "securityIssueCap": 5
+    "securityIssueCap": 5,
+    "depsPrCap": 3,
+    "depsIssueCap": 5
   },
   "dailyUpdate": {
     "subSkills": ["daily-changelog", "audit-design-docs"],

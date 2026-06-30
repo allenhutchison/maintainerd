@@ -95,7 +95,7 @@ the default branch, no tags/versioned artifact — e.g. a web service), write `"
 in doubt, ask.
 
 Defaults to apply without asking (state them in the report):
-- `labels`: `architecture` / `test-quality` / `security` / `automated`.
+- `labels`: `architecture` / `test-quality` / `security` / `dependencies` / `automated`.
 - `audits`: `3 / 5 / 2 / 2`.
 - `autoDev` label names: the `auto:*` set from the schema.
 - `autoDev.excludedLabels`: `["epic", "question", "wontfix", "duplicate", "invalid"]`.
@@ -142,6 +142,7 @@ The labels in the config must exist in GitHub for the audits and auto-dev to app
 gh label create architecture --color BFD4F2 --description "audit-architecture findings" 2>/dev/null || true
 gh label create test-quality --color D4C5F9 --description "audit-tests findings" 2>/dev/null || true
 gh label create security     --color D93F0B --description "audit-security findings" 2>/dev/null || true
+gh label create dependencies --color 0366D6 --description "audit-deps findings" 2>/dev/null || true
 gh label create automated    --color EDEDED --description "Opened by a Maintainerd skill" 2>/dev/null || true
 # auto:* labels only if auto-dev is enabled
 ```
