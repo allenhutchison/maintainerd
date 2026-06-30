@@ -27,7 +27,7 @@ suite's scope coherent.
 | Plugin | Skills |
 | --- | --- |
 | `maintainerd-core` | `bootstrap` |
-| `repo-ops` | `create-pr`, `address-review`, `code-review`, `daily-changelog`, `daily-update` |
+| `repo-ops` | `create-pr`, `address-review`, `code-review`, `release`, `daily-changelog`, `daily-update` |
 | `audits` | `audit-architecture`, `audit-tests`, `audit-security`, `audit-design-docs`, `audit-product-docs` |
 | `research` | `research-radar` |
 | `auto-dev` | `auto-dev`, `review-queue` |
@@ -38,7 +38,7 @@ suite's scope coherent.
 
 | Skill | Status | Source | What it does |
 | --- | --- | --- | --- |
-| `release` | ♻️ Extract | `release-process` in both repos | Version bump → promote the daily changelog into versioned release notes → tag → GitHub release → verify. The "ship a version" counterpart to `daily-changelog`'s "record a day." |
+| ~~`release`~~ | ✅ **Shipped** | was `release-process` (obsidian-gemini) | Gather changes since the last tag → update notes → pre-flight + the repo's final release gate → bump via `config.release.versionCommand` → tag → GitHub release → verify. The "ship a version" counterpart to `daily-changelog`. Version mechanism + notes file come from `config.release`; repo-specific gates/caveats from `config.guidelines.release`; `release: null` = continuous-deploy repo (confirms before acting). |
 | ~~`address-review`~~ | ✅ **Shipped** | was `coderabbit-review` (global) | The review-response loop, expanded so bot (CodeRabbit / gemini-code-assist / `config.review.bots`) and human feedback are equal first-class citizens: fetch → triage → fix (one commit each) → pre-flight → push → reply to every inline thread + a PR-level round summary → wait → repeat to approval. Closes the PR lifecycle alongside `create-pr`. |
 
 ## audits candidates (capped, silent-on-clean findings)
@@ -124,12 +124,11 @@ per-repo pointer. The canonical `config-schema.md` gains a "User-level config" s
 
 ## Suggested v0.2 batch
 
-Closes the loop *bootstrap → build → review → ship → keep-healthy*. `address-review` and
-`audit-security` are done (✅); the rest:
+Closes the loop *bootstrap → build → review → ship → keep-healthy*. `address-review`,
+`audit-security`, and `release` are done (✅); the rest:
 
-1. `release` (♻️)
-2. `audit-deps` (✨)
-3. `doctor` (✨)
+1. `audit-deps` (✨)
+2. `doctor` (✨)
 
 Plus `worklog` (♻️) as the first skill in the new `journal` category — its config home is now
 settled (user-level `~/.claude/maintainerd.json`; see the journal section above).

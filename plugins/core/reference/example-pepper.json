@@ -65,5 +65,6 @@
   },
   "review": {
     "bots": ["coderabbitai[bot]", "gemini-code-assist[bot]"]
-  }
+  },
+  "release": null
 }

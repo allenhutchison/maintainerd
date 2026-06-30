@@ -23,7 +23,8 @@
   "guidelines": {
     "coding": ".claude/guidelines/coding.md",
     "testing": ".claude/guidelines/testing.md",
-    "invariants": ".claude/guidelines/invariants.md"
+    "invariants": ".claude/guidelines/invariants.md",
+    "release": ".claude/guidelines/release.md"
   },
   "labels": {
     "architecture": "architecture",
@@ -65,5 +66,12 @@
   },
   "review": {
     "bots": ["coderabbitai[bot]", "gemini-code-assist[bot]"]
+  },
+  "release": {
+    "versionCommand": "npm version {level}",
+    "versionPushesTag": true,
+    "notesFile": "src/release-notes.json",
+    "readmeSection": "What's New",
+    "githubRelease": true
   }
 }

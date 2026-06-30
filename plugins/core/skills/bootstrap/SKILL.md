@@ -88,6 +88,12 @@ Use `AskUserQuestion` for anything you couldn't determine confidently — typica
 they installed (so the `dailyUpdate.subSkills` roster lists only real skills), whether auto-dev is
 `enabled`, label names if they differ from the defaults, and the research-radar `userAgent` email.
 
+Also determine the **release** model. If the repo ships versioned releases, detect the version-bump
+mechanism (`npm version` + a `postversion` push hook, `hatch version`, `bump2version`, a manual
+tag…) and the notes file, and write the `release` section. If it ships continuously (deploys from
+the default branch, no tags/versioned artifact — e.g. a web service), write `"release": null`. When
+in doubt, ask.
+
 Defaults to apply without asking (state them in the report):
 - `labels`: `architecture` / `test-quality` / `security` / `automated`.
 - `audits`: `3 / 5 / 2 / 2`.
@@ -115,6 +121,10 @@ re-run, leave populated ones untouched). Seed each from what the repo already do
   **This is the file that most needs a human.** Seed it with a short template and any invariants you
   can extract from `CLAUDE.md`/`AGENTS.md`, but clearly `TODO`-mark it: the audit is only as good as
   the rules listed here.
+- `release.md` *(only for repos that cut versioned releases)* — release-specific gates and caveats
+  the `release` skill runs last: any runtime/smoke test the unit suite can't cover, dependency
+  caveats, release-name formatting a registry enforces, notes-rendering quirks. Skip this file for
+  continuous-deploy repos (`release: null`).
 
 Each scaffolded file should start with a one-line header explaining what reads it and that it's
 safe to edit freely.

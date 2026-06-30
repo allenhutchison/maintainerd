@@ -70,7 +70,8 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
   "guidelines": {
     "coding":     ".claude/guidelines/coding.md",
     "testing":    ".claude/guidelines/testing.md",
-    "invariants": ".claude/guidelines/invariants.md"
+    "invariants": ".claude/guidelines/invariants.md",
+    "release":    ".claude/guidelines/release.md"  // optional; repo-specific release gates + caveats (read by `release`)
   },
 
   // ── GitHub labels ────────────────────────────────────────────────────────
@@ -126,6 +127,15 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
     // Automated-reviewer logins to recognize. Humans need no listing — any reviewer
     // who isn't the PR author is treated as a human reviewer. Optional; defaults to these two.
     "bots": ["coderabbitai[bot]", "gemini-code-assist[bot]"]
+  },
+
+  // ── release (the `release` skill) — null/omitted = repo ships continuously, no versioned release ──
+  "release": {
+    "versionCommand":   "npm version {level}", // {level} -> patch|minor|major; null = tag manually
+    "versionPushesTag": true,                   // true if that command also commits+tags+pushes (e.g. npm postversion)
+    "notesFile":        "src/release-notes.json", // changelog/notes file to update; null = GitHub-release notes only
+    "readmeSection":    "What's New",           // a README heading to keep in sync; null = skip
+    "githubRelease":    true                     // create/publish a GitHub release from the tag
   }
 }
 ```
@@ -167,7 +177,7 @@ as benign rather than "a human is mid-work."
 
 Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
 
-### `labels`, `audits`, `dailyUpdate`, `autoDev`, `researchRadar`, `review`
+### `labels`, `audits`, `dailyUpdate`, `autoDev`, `researchRadar`, `review`, `release`
 
 - `labels.*` — GitHub label names the skills apply. They must already exist in the repo (bootstrap
   offers to create them).
@@ -182,6 +192,11 @@ Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
 - `review.bots` *(optional)* — extra automated-reviewer logins `address-review` should recognize.
   Defaults to `["coderabbitai[bot]", "gemini-code-assist[bot]"]`. Humans are auto-detected (any
   reviewer who isn't the PR author), so only bots go here.
+- `release.*` *(optional; `null`/omitted = no versioned releases — the repo ships continuously)* —
+  the version-bump mechanism (`versionCommand` with `{level}`, `versionPushesTag`), the notes file
+  to update (`notesFile`), an optional README section to sync (`readmeSection`), and whether to
+  create a GitHub release (`githubRelease`). Repo-specific gates/caveats live in
+  `guidelines.release`, not here.
 
 ---
 
@@ -195,6 +210,7 @@ Long-form, judgment-heavy rules don't belong in JSON. They live in markdown file
 | `coding.md` | `code-review`, `audit-architecture` | The coding standards a senior reviewer enforces here — error-handling conventions, logging (`logger` vs `print`/`console`), typing expectations, naming, banned patterns. |
 | `testing.md` | `audit-tests`, `code-review` | Test conventions — the DB/fixture pattern, what may and may not be mocked, isolation rules, assertion expectations, naming. |
 | `invariants.md` | `audit-architecture` | The **load-bearing, repo-specific invariants** that CI doesn't catch. This is the file that replaces the hardcoded repo-specific prose the old per-repo audits carried (e.g. pepper's `app.state` lifespan wiring + `SecretStr` rule; an Obsidian plugin's "use `plugin.logger`, never `console`" + "don't touch the generated-help file"). The audit reads each rule here and checks the diff against it. |
+| `release.md` *(optional)* | `release` | Repo-specific release gates and caveats: a runtime/smoke test the unit suite can't cover, dependency caveats, release-name formatting a registry enforces, notes-rendering quirks, artifact specifics (e.g. an Obsidian plugin's live-transport smoke gate + the "release title must contain full X.Y.Z" rule). |
 
 A skill that finds a guidelines file missing or still full of `TODO` markers should note that in
 its report (the rule coverage is only as good as these files) and proceed with the
