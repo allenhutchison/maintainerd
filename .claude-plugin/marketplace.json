@@ -8,7 +8,7 @@
     {
       "name": "maintainerd-core",
       "source": "./plugins/core",
-      "description": "Foundation: the bootstrap skill that generates a repo's .claude/maintainerd.json config contract, plus the canonical config schema every other plugin reads. Install this first.",
+      "description": "Foundation: bootstrap (generates a repo's .claude/maintainerd.json config contract) and doctor (validates that setup and reports what's wrong), plus the canonical config schema every other plugin reads. Install this first.",
       "version": "0.1.0"
     },
     {

@@ -14,7 +14,7 @@ skill generates that contract for any repo.
 
 | Plugin | Skills | Install when |
 | --- | --- | --- |
-| **maintainerd-core** | `bootstrap` | Always — it generates the config every other plugin needs. |
+| **maintainerd-core** | `bootstrap`, `doctor` | Always — `bootstrap` generates the config every other plugin needs; `doctor` validates it. |
 | **repo-ops** | `create-pr`, `address-review`, `code-review`, `release`, `daily-changelog`, `daily-update` | You want the baseline PR + changelog dev flow. |
 | **audits** | `audit-architecture`, `audit-tests`, `audit-security`, `audit-deps`, `audit-design-docs`, `audit-product-docs` | You want scheduled tech-debt / test / security / dependency / doc sweeps. |
 | **research** | `research-radar` | You want proactive research surfaced — a periodic arXiv scan for papers relevant to this repo. |
@@ -80,7 +80,7 @@ to run `/bootstrap`. The canonical schema and the shared "read your repo config"
 maintainerd/
   .claude-plugin/marketplace.json
   plugins/
-    core/      .claude-plugin/plugin.json  skills/bootstrap/  reference/config-schema.md
+    core/      .claude-plugin/plugin.json  skills/{bootstrap,doctor}/  reference/config-schema.md
     repo-ops/  .claude-plugin/plugin.json  skills/{create-pr,address-review,code-review,release,daily-changelog,daily-update}/
     audits/    .claude-plugin/plugin.json  skills/{audit-architecture,audit-tests,audit-security,audit-deps,audit-design-docs,audit-product-docs}/
     research/  .claude-plugin/plugin.json  skills/{research-radar}/

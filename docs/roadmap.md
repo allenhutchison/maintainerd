@@ -80,7 +80,7 @@ dedicated `issues` plugin.
 
 | Skill | Status | Source | What it does |
 | --- | --- | --- | --- |
-| `doctor` | ✨ Net-new | — | The companion to `bootstrap`: validate `.claude/maintainerd.json` + guidelines health, confirm the configured labels exist on GitHub, confirm schedules are wired, flag stubbed `invariants.md`. The thing you run when a skill misbehaves. |
+| ~~`doctor`~~ | ✅ **Shipped** | new (in `maintainerd-core`) | The companion to `bootstrap`: validate `.claude/maintainerd.json` (parses + schema-conformant), that paths/commands/guidelines resolve, that the configured labels exist on GitHub, that the daily-update roster only names installed skills, auto-dev + release coherence, and flag stubbed `invariants.md`. Read-only PASS/WARN/FAIL report; offers to create missing labels with `--fix`. The thing you run when a skill misbehaves. |
 | `sync-config` | ✨ Net-new | — | Re-run bootstrap's detection when the repo changes (new test command, renamed dirs) and propose a config diff for approval. |
 | `skill-author` | ♻️ Extract | `skill-author` in pepper | A *meta* skill that scaffolds a new config-driven Maintainerd skill (frontmatter, config preamble, conventions). On-brand and accelerates everything else in this list. |
 
@@ -122,16 +122,15 @@ per-repo pointer. The canonical `config-schema.md` gains a "User-level config" s
 
 ---
 
-## Suggested v0.2 batch
+## v0.2 batch — done ✅
 
-Closes the loop *bootstrap → build → review → ship → keep-healthy*. `address-review`,
-`audit-security`, `release`, and `audit-deps` are done (✅); remaining:
+The loop *bootstrap → build → review → ship → keep-healthy* is closed: `address-review`,
+`audit-security`, `release`, `audit-deps`, and `doctor` all shipped.
 
-1. `doctor` (✨)
+Next up, no longer part of v0.2:
 
-Plus `worklog` (♻️) as the first skill in the new `journal` category — its config home is now
-settled (user-level `~/.claude/maintainerd.json`; see the journal section above).
+- `worklog` (♻️) — the first skill in the new `journal` category; its config home is settled
+  (user-level `~/.claude/maintainerd.json`; see the journal section above).
 
-And whenever the `auto-dev` rollout happens, pull in `create-issue` (✨) alongside it — a pipeline
-is only as good as the issues fed into it, and `create-issue` is the front-door that keeps them
-well-formed and buildable.
+- `create-issue` (✨) — pull in alongside the `auto-dev` rollout; a pipeline is only as good as the
+  issues fed into it, and `create-issue` is the front-door that keeps them well-formed and buildable.
