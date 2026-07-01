@@ -67,7 +67,7 @@ dedicated `issues` plugin.
 
 | Skill | Status | Source | What it does |
 | --- | --- | --- | --- |
-| `create-issue` | ✨ Net-new | — | Turn a rough request ("X is broken", "we should add Y") into a GitHub issue that's **ready for `auto-dev`**. Takes the user's input, then **either investigates the codebase** to isolate the affected files / likely root cause / repro steps, **or asks targeted clarifying questions** when the ask is underspecified — then writes an issue with a crisp problem statement, acceptance criteria, and concrete pointers (files/symbols/commands). Labels it per `config.autoDev.stateLabels` so it lands in the pipeline at the right state (entering triage by default, or `auto:ready` when the user is confident), and respects `config.autoDev.excludedLabels`. The front-door companion to the whole pipeline. |
+| ~~`create-issue`~~ | ✅ **Shipped** (in `auto-dev`) | new | Turn a rough request into a GitHub issue **ready for `auto-dev`**: investigate the codebase to ground it in real file/symbol pointers (or ask only the gaps investigation can't answer), draft a crisp problem statement + acceptance criteria + tight scope, dedup, confirm, and file. Leaves the issue for auto-dev's triage by default (doesn't skip the plan-approval handshake); excludes epics/questions via `config.autoDev.excludedLabels`. The front-door companion to the pipeline. |
 | `triage-issues` | ♻️ Extract | `triage-issues` in obsidian-gemini | Label unlabeled issues via `gh`. Conservative — never closes or reassigns, only adds existing labels. |
 
 ## auto-dev candidates
@@ -124,10 +124,10 @@ per-repo pointer. The canonical `config-schema.md` now has a "User-level config"
 The loop *bootstrap → build → review → ship → keep-healthy* is closed: `address-review`,
 `audit-security`, `release`, `audit-deps`, and `doctor` all shipped.
 
-`worklog` (♻️) also shipped since — the first `journal`-category skill, on the user-level config.
+`worklog` (♻️, journal) and `create-issue` (✨, in `auto-dev`) also shipped since.
 
 Next up:
 
-- `create-issue` (✨) — pull in alongside the `auto-dev` rollout; a pipeline is only as good as the
-  issues fed into it, and `create-issue` is the front-door that keeps them well-formed and buildable.
 - `weekly-review` / `decision-log` (✨) — speculative `journal` siblings once `worklog` has proven out.
+- `triage-issues` (♻️) — the other issue-intake candidate, still on the list.
+- **Migration** — onboard a real repo (pepper or obsidian-gemini) to prove the whole suite end-to-end.

@@ -19,7 +19,7 @@ skill generates that contract for any repo.
 | **audits** | `audit-architecture`, `audit-tests`, `audit-security`, `audit-deps`, `audit-design-docs`, `audit-product-docs` | You want scheduled tech-debt / test / security / dependency / doc sweeps. |
 | **research** | `research-radar` | You want proactive research surfaced — a periodic arXiv scan for papers relevant to this repo. |
 | **journal** | `worklog` | You want a day's shipped work captured into your Obsidian vault (user-scoped — spans all your repos). |
-| **auto-dev** | `auto-dev`, `review-queue` | You want the autonomous issue→PR pipeline. |
+| **auto-dev** | `create-issue`, `auto-dev`, `review-queue` | You want the autonomous issue→PR pipeline (from issue intake through build to review). |
 
 A repo installs only the plugins it wants. `auto-dev` works standalone (with `maintainerd-core`
 for config); the audits and repo-ops compose but don't require each other.
@@ -91,7 +91,7 @@ maintainerd/
     audits/    .claude-plugin/plugin.json  skills/{audit-architecture,audit-tests,audit-security,audit-deps,audit-design-docs,audit-product-docs}/
     research/  .claude-plugin/plugin.json  skills/{research-radar}/
     journal/   .claude-plugin/plugin.json  skills/{worklog}/
-    auto-dev/  .claude-plugin/plugin.json  skills/{auto-dev,review-queue}/
+    auto-dev/  .claude-plugin/plugin.json  skills/{create-issue,auto-dev,review-queue}/
 ```
 
 ## Roadmap
