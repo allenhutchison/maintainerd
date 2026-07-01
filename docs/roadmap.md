@@ -86,17 +86,14 @@ dedicated `issues` plugin.
 
 ---
 
-## New category: journal / worklog (cross-repo, maintainer-scoped)
+## Category: journal (cross-repo, user-scoped) — shipped ✅
 
-The existing global **`worklog`** skill summarizes a day's work as a dated entry in an Obsidian
-vault — creating a session-summary note, linking it from the project hub note, adding a one-line
-entry under the daily note, and scanning the day's merged GitHub PRs for completeness. It's a
-strong, heavily-used skill and clearly belongs in the suite.
+The `journal` **plugin** is live, anchored by **`worklog`**, which summarizes a day's shipped work as
+a dated entry in an Obsidian vault — a session-summary note, a project-hub link, and a daily-note
+line, drawn from the day's merged PRs enriched by the live session.
 
-It doesn't fit the existing plugins cleanly, because unlike every shipped skill it's **not
-repo-scoped** — it writes to a *personal vault* and spans projects. That suggests a new category
-(working name **`journal`**) for maintainer-scoped narration/record-keeping, alongside future
-siblings like a decision-log or a weekly-review skill.
+It's the first skill that isn't repo-scoped: it writes to a *personal vault* that spans projects,
+which is exactly why it drove the two-tier config design below.
 
 **Resolved design (two-tier config).** The intended usage is: install the plugins once at the
 **user level**, then use them across many repos; each repo-scoped skill discovers that repo's
@@ -111,12 +108,12 @@ The only genuinely per-repo bit is *which* project folder / hub note a given rep
 an optional `journal.hubNote` pointer in the repo-level `maintainerd.json`, falling back to
 matching the repo name against `Projects/**`. So the rule stays clean: **repo-scoped settings →
 repo config; user-scoped settings → user config**, and worklog bridges them with one optional
-per-repo pointer. The canonical `config-schema.md` gains a "User-level config" section when
-`worklog` ships.
+per-repo pointer. The canonical `config-schema.md` now has a "User-level config" section documenting
+`~/.claude/maintainerd.json`.
 
 | Skill | Status | Source | What it does |
 | --- | --- | --- | --- |
-| `worklog` | ♻️ Extract | `worklog` (global) | Summarize the day's shipped work into the user's Obsidian vault: session-summary note + project-hub link + daily-note line, enriched from merged PRs. |
+| ~~`worklog`~~ | ✅ **Shipped** | was `worklog` (global) | Summarize the day's shipped work into the user's Obsidian vault: session-summary note + project-hub link + daily-note line, from merged PRs enriched by the live session. Vault from user-level config; optional per-repo `journal` pointer maps the repo to its vault project. Append-safe (never clobbers prior entries). |
 | `weekly-review` | ✨ Net-new | — | Roll the week's worklogs/PRs into a higher-level review note. (Speculative sibling.) |
 | `decision-log` | ✨ Net-new | — | Capture notable technical decisions as dated ADR-style notes. (Speculative sibling.) |
 
@@ -127,10 +124,10 @@ per-repo pointer. The canonical `config-schema.md` gains a "User-level config" s
 The loop *bootstrap → build → review → ship → keep-healthy* is closed: `address-review`,
 `audit-security`, `release`, `audit-deps`, and `doctor` all shipped.
 
-Next up, no longer part of v0.2:
+`worklog` (♻️) also shipped since — the first `journal`-category skill, on the user-level config.
 
-- `worklog` (♻️) — the first skill in the new `journal` category; its config home is settled
-  (user-level `~/.claude/maintainerd.json`; see the journal section above).
+Next up:
 
 - `create-issue` (✨) — pull in alongside the `auto-dev` rollout; a pipeline is only as good as the
   issues fed into it, and `create-issue` is the front-door that keeps them well-formed and buildable.
+- `weekly-review` / `decision-log` (✨) — speculative `journal` siblings once `worklog` has proven out.

@@ -76,5 +76,9 @@
     "notesFile": "src/release-notes.json",
     "readmeSection": "What's New",
     "githubRelease": true
+  },
+  "journal": {
+    "project": "Gemini Scribe",
+    "hubNote": "Projects/Gemini Scribe/Gemini Scribe - MOC.md"
   }
 }

@@ -139,6 +139,13 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
     "notesFile":        "src/release-notes.json", // changelog/notes file to update; null = GitHub-release notes only
     "readmeSection":    "What's New",           // a README heading to keep in sync; null = skip
     "githubRelease":    true                     // create/publish a GitHub release from the tag
+  },
+
+  // ── journal (optional) — maps THIS repo to its project in the user's vault (used by `worklog`) ──
+  // The vault itself is user-scoped and lives in the user-level config (see "User-level config" below).
+  "journal": {
+    "project":  "my-project",                              // project folder name under the vault's projectsGlob
+    "hubNote":  "Projects/my-project/my-project.md"        // explicit vault-relative hub note; optional (else inferred)
   }
 }
 ```
@@ -201,6 +208,10 @@ Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
   to update (`notesFile`), an optional README section to sync (`readmeSection`), and whether to
   create a GitHub release (`githubRelease`). Repo-specific gates/caveats live in
   `guidelines.release`, not here.
+- `journal.*` *(optional)* — maps this repo to its project in the user's Obsidian vault for
+  `worklog`: `project` (folder name) and/or `hubNote` (explicit vault-relative path). Absent → the
+  project is inferred from the repo name. The **vault itself is not here** — it's user-scoped; see
+  [User-level config](#user-level-config).
 
 ---
 
@@ -222,8 +233,37 @@ language-generic checks it can still perform.
 
 ---
 
+## User-level config
+
+Almost everything above is **repo-scoped** — it lives in each repo's `.claude/maintainerd.json`,
+because it describes *that repo*. A few settings are **user-scoped**: they're the same across every
+repo the user works in, so pinning them per-repo would be redundant and wrong. Those live in a
+**user-level** file at `~/.claude/maintainerd.json`, read once regardless of which repo you're in.
+
+Today this holds the `journal` category's vault:
+
+```jsonc
+// ~/.claude/maintainerd.json  (per-user, not checked into any repo)
+{
+  "journal": {
+    "vault":        "/Users/you/Obsidian/my-vault", // Obsidian vault root — required by `worklog`
+    "projectsGlob": "Projects/**"                    // where project folders live (optional; default "Projects/**")
+  }
+}
+```
+
+The split rule: **repo-scoped settings → repo config; user-scoped settings → user config.** `worklog`
+bridges them — it reads the vault from here, and the *optional* per-repo `journal.project`/`hubNote`
+pointer (above) from the repo config to know which vault project *this* repo maps to. If the user-level
+file or `journal.vault` is absent, `worklog` asks for the vault path and offers to write it here.
+
+A sample lives alongside this file as [`example-user.json`](example-user.json).
+
+---
+
 ## Worked examples
 
-A complete pepper (`python`) and obsidian-gemini (`typescript`) config live alongside this file as
-[`example-pepper.json`](example-pepper.json) and [`example-obsidian.json`](example-obsidian.json).
-They double as the round-trip fixtures the verification step checks the schema against.
+A complete pepper (`python`) and obsidian-gemini (`typescript`) repo config live alongside this file
+as [`example-pepper.json`](example-pepper.json) and [`example-obsidian.json`](example-obsidian.json),
+and a user-level config as [`example-user.json`](example-user.json). They double as the round-trip
+fixtures the verification step checks the schema against.

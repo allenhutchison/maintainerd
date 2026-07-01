@@ -69,5 +69,8 @@
   "review": {
     "bots": ["coderabbitai[bot]", "gemini-code-assist[bot]"]
   },
-  "release": null
+  "release": null,
+  "journal": {
+    "project": "Pepper"
+  }
 }

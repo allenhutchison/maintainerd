@@ -18,6 +18,7 @@ skill generates that contract for any repo.
 | **repo-ops** | `create-pr`, `address-review`, `code-review`, `release`, `daily-changelog`, `daily-update` | You want the baseline PR + changelog dev flow. |
 | **audits** | `audit-architecture`, `audit-tests`, `audit-security`, `audit-deps`, `audit-design-docs`, `audit-product-docs` | You want scheduled tech-debt / test / security / dependency / doc sweeps. |
 | **research** | `research-radar` | You want proactive research surfaced — a periodic arXiv scan for papers relevant to this repo. |
+| **journal** | `worklog` | You want a day's shipped work captured into your Obsidian vault (user-scoped — spans all your repos). |
 | **auto-dev** | `auto-dev`, `review-queue` | You want the autonomous issue→PR pipeline. |
 
 A repo installs only the plugins it wants. `auto-dev` works standalone (with `maintainerd-core`
@@ -70,9 +71,14 @@ for config); the audits and repo-ops compose but don't require each other.
   invariants live in `.claude/guidelines/*.md`, which the skills read at runtime. This keeps the
   JSON scannable and lets the prose diff cleanly.
 
-Every skill begins by reading `.claude/maintainerd.json`; if it's missing, the skill tells you
-to run `/bootstrap`. The canonical schema and the shared "read your repo config" preamble live in
+Most skills begin by reading `.claude/maintainerd.json`; if it's missing, the skill tells you to run
+`/bootstrap`. The canonical schema and the shared "read your repo config" preamble live in
 [`plugins/core/reference/config-schema.md`](plugins/core/reference/config-schema.md).
+
+- **User-scoped exception.** A few settings are the same across every repo you work in (the `journal`
+  category's Obsidian vault). Those live in a **user-level** `~/.claude/maintainerd.json`, read once
+  regardless of repo. `worklog` reads the vault from there and an optional per-repo pointer from the
+  repo config. See "User-level config" in the schema reference.
 
 ## Repository layout
 
@@ -84,6 +90,7 @@ maintainerd/
     repo-ops/  .claude-plugin/plugin.json  skills/{create-pr,address-review,code-review,release,daily-changelog,daily-update}/
     audits/    .claude-plugin/plugin.json  skills/{audit-architecture,audit-tests,audit-security,audit-deps,audit-design-docs,audit-product-docs}/
     research/  .claude-plugin/plugin.json  skills/{research-radar}/
+    journal/   .claude-plugin/plugin.json  skills/{worklog}/
     auto-dev/  .claude-plugin/plugin.json  skills/{auto-dev,review-queue}/
 ```
 

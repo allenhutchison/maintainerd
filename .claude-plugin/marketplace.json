@@ -30,6 +30,12 @@
       "version": "0.1.0"
     },
     {
+      "name": "journal",
+      "source": "./plugins/journal",
+      "description": "User-scoped narration that spans repos: worklog captures a day's shipped work (merged PRs enriched by the live session) into the user's Obsidian vault. Vault path lives in a user-level ~/.claude/maintainerd.json; a per-repo pointer maps each repo to its vault project.",
+      "version": "0.1.0"
+    },
+    {
       "name": "auto-dev",
       "source": "./plugins/auto-dev",
       "description": "Autonomous issue-to-PR pipeline driven by an auto:* GitHub label state machine, plus review-queue, the maintainer's console for it. Configurable label names, markers, and branch prefixes.",
