@@ -38,11 +38,20 @@ cat .claude/maintainerd.json 2>/dev/null
 Run these and read the results — don't assume:
 
 ```bash
-gh repo view --json nameWithOwner -q .nameWithOwner   # -> repo
-git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@' \
-  || git branch --show-current                         # -> defaultBranch (fallback to current branch)
+# repo slug — gh first; if origin isn't a GitHub remote (e.g. a local clone), parse the URL
+gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null \
+  || git remote get-url origin 2>/dev/null | sed -E 's#(git@github.com:|https://github.com/)##; s#\.git$##'
+# default branch — origin/HEAD, else the remote's advertised default
+git symbolic-ref --short refs/remotes/origin/HEAD 2>/dev/null | sed 's@^origin/@@'
 ls pyproject.toml package.json go.mod Cargo.toml 2>/dev/null
 ```
+
+**Confirm the repo slug and default branch — don't trust detection blindly.** Two traps: (1) if
+`origin` points at a local path or a non-GitHub host, `gh repo view` yields nothing — fall back to the
+URL parse, and if that's also empty, **ask the user**. (2) `origin/HEAD` can be stale or, in a clone
+made off a feature branch, point at that branch instead of `main`/`master` — so if the detected
+default isn't `main`/`master`, or the current branch isn't it, **confirm with the user** rather than
+writing a feature branch into the config.
 
 - `pyproject.toml` present, no `package.json` → `language: "python"`.
 - `package.json` present, no `pyproject.toml` → `language: "typescript"`.

@@ -14,7 +14,7 @@
     "source": "src/pepper/",
     "tests": "tests/",
     "designDocs": ["planning/"],
-    "productDocs": ["docs/", "README.md", "CLAUDE.md"],
+    "productDocs": ["README.md", "CLAUDE.md"],
     "changelogDir": "planning/release-notes/",
     "researchRadarDir": "planning/research-radar/",
     "prTemplate": ".github/PULL_REQUEST_TEMPLATE.md",
