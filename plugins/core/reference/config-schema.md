@@ -213,13 +213,16 @@ Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
   `audit-deps` counts a batched routine-bump PR as a single PR. `promoteThreshold` (default `3`) and
   `promoteLookbackDays` (default `90`) govern **pattern promotion** — when the guideline-checking
   audits (architecture/tests/security) have fixed the same specific pattern `promoteThreshold` times
-  within the window, they file one human-gated issue proposing it become a guideline rule (see
-  [`../../audits/reference/pattern-promotion.md`](../../audits/reference/pattern-promotion.md)).
-- `models.*` *(optional)* — tier→model bindings (`fast`, `capable`, optionally `mid`; `"inherit"` =
-  no override). Declarative reference config: it records which concrete model backs each tier so
-  scheduled routines are tiered consistently, and subagent-spawning skills can read it. Absent → every
-  routine inherits its scheduled model (pre-tiering behavior). See
-  [`model-tiers.md`](model-tiers.md) for which routine wants which tier and why.
+  within the window, they file one human-gated issue proposing it become a guideline rule; if a rule
+  already exists and keeps being violated, they instead propose the corresponding **mechanical guard**
+  (a lint/CI check). See
+  [`../../audits/reference/pattern-promotion.md`](../../audits/reference/pattern-promotion.md).
+- `models.*` *(optional)* — tier→model bindings. `fast` / `capable` (optionally a `mid` rung) map a
+  tier to a concrete model id; **`default` is not a tier — it's the fallback key** used when a skill
+  names no tier. Any of them set to `"inherit"` means no override. Declarative reference config: it
+  records which concrete model backs each tier so scheduled routines are tiered consistently, and
+  subagent-spawning skills can read it. Absent → every routine inherits its scheduled model
+  (pre-tiering behavior). See [`model-tiers.md`](model-tiers.md) for which routine wants which tier.
 - `dailyUpdate.subSkills` — the ordered roster `daily-update` runs. **Only list skills that are
   actually installed in this repo**, or `daily-update` will try to invoke a missing skill.
   `{date}` in `commitSubject` is replaced with the ISO date.

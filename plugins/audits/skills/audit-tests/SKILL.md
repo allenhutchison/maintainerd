@@ -298,8 +298,9 @@ Before reporting, run the **pattern-promotion** check. If a finding this run is 
 *specific, encodable* test-quality pattern this audit has already fixed or filed
 `config.audits.promoteThreshold` times (default 3) within `config.audits.promoteLookbackDays` (default
 90) — e.g. *"new tests keep mocking the DB session instead of using the `db` fixture"* — file **one**
-human-gated issue proposing the pattern become a rule in `config.guidelines.testing`, rather than only
-fixing the instance again. Full mechanism, history queries, dedup marker, and template live in
+human-gated issue proposing the pattern become a rule in `config.guidelines.testing` — or, if the
+rule already exists and keeps being violated, a **mechanical guard** (a lint rule / CI check) instead
+— rather than only fixing the instance again. Full mechanism, history queries, dedup marker, and template live in
 [`../../reference/pattern-promotion.md`](../../reference/pattern-promotion.md); this audit's
 `<audit-name>` is `tests` and its branch prefix is `audit-tests-`. The proposal is **in addition to**
 the normal fix, does **not** count against the caps, and is capped at one per run. Never auto-edit the
@@ -323,7 +324,7 @@ Issues filed:
 
 Deferred (over cap, next run): <n> — <one-line each>
 Pre-flight abandoned (unrelated failure): <branch> — <reason>
-Systemic: proposed encoding <pattern> as a rule in config.guidelines.testing — issue #NNN (seen <N>× in <days>d)
+Systemic: proposed encoding <pattern> as a rule in config.guidelines.testing (or a mechanical guard if the rule already exists) — issue #NNN (seen <N>× in <days>d)
 ```
 
 ## Calibrating scope

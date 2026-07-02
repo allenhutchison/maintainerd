@@ -179,7 +179,7 @@ Findings: <total>   (Critical <n> · High <n> · Medium <n> · Low <n>)
 
 Secrets: <0, or "see direct alert — N redacted finding(s), NOT posted publicly">
 
-Systemic: proposed encoding <pattern> as a rule in <guideline file> — issue #NNN (seen <N>× in <days>d)
+Systemic: proposed encoding <pattern> as a rule in <guideline file> (or a mechanical guard if the rule already exists) — issue #NNN (seen <N>× in <days>d)
 
 No findings in: <clean categories>     Not scanned: <categories with no tool>
 ```

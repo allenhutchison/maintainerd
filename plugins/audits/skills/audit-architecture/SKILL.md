@@ -296,8 +296,9 @@ a ratchet. If this run's finding is an instance of a *specific, encodable patter
 already fixed or filed `config.audits.promoteThreshold` times (default 3) within
 `config.audits.promoteLookbackDays` (default 90), file **one** human-gated issue proposing the pattern
 become a rule in `config.guidelines.invariants` (load-bearing/structural patterns) or
-`config.guidelines.coding` (conventions like logger-not-`print`, typing style) — rather than only
-fixing the instance again. The full mechanism, history queries, dedup marker, and issue template live
+`config.guidelines.coding` (conventions like logger-not-`print`, typing style) — or, if the rule
+already exists and keeps being violated, a **mechanical guard** (a lint rule / CI check) instead —
+rather than only fixing the instance again. The full mechanism, history queries, dedup marker, and issue template live
 in [`../../reference/pattern-promotion.md`](../../reference/pattern-promotion.md); this audit's
 `<audit-name>` is `architecture` and its branch prefix is `arch-`. This proposal is **in addition to**
 the normal fix, does **not** count against the PR/issue caps, and is capped at one per run. Never
@@ -332,7 +333,7 @@ Deferred (will retry next run):
 Pre-flight failures (PRs not opened):
 - arch-any-loop-types — tests failed on <test> (unrelated)
 
-Systemic: proposed encoding <pattern> as a rule in <guideline file> — issue #NNN (seen <N>× in <days>d)
+Systemic: proposed encoding <pattern> as a rule in <guideline file> (or a mechanical guard if the rule already exists) — issue #NNN (seen <N>× in <days>d)
 
 No findings in: <list of categories that came up clean>
 ```

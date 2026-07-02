@@ -22,7 +22,8 @@ Before anything else, load the repo config (see
 
    Do not run any tick logic, post any comment, or change any label while disabled.
 4. Read the keys this skill needs: `config.repo`, `config.defaultBranch`, `config.commands.*`
-   (`format`, `lint`, `build`, `typecheck`, `test`), and the whole `config.autoDev` block —
+   (`format`, `lint`, `build`, `typecheck`, `test`), `config.guidelines` (its behavioral/smoke
+   checks feed step 3's verification — item 6), and the whole `config.autoDev` block —
    `branchPrefix`, `marker`, `stateLabels.*`, `excludedLabels`, and `openPrsAsDraft`.
 5. Treat a `null` command as **"this repo has no such step — skip it, don't invent one."**
 
