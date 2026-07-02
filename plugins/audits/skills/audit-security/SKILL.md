@@ -37,6 +37,7 @@ Before anything else, load the repo config (see
    - `config.labels.security` — label applied to every PR/issue this skill opens (default `security`).
    - `config.labels.automated` — also applied (default `automated`).
    - `config.audits.securityPrCap` / `config.audits.securityIssueCap` — per-run caps (default **3 / 5**).
+   - `config.audits.promoteThreshold` / `config.audits.promoteLookbackDays` — pattern-promotion knobs (default **3** within **90** days). See step 6.
    - `config.guidelines.invariants` / `config.guidelines.coding` — **the repo's own security rules.**
      Read these; they hold repo-specific invariants the generic checks can't know (e.g. "secrets are
      `SecretStr`, never `str`", "never log a secret", "all SQL goes through the query builder", "use
@@ -146,7 +147,23 @@ Process findings **highest-severity first**. For each:
 Caps: default **3 PRs / 5 issues** per run. **But Critical/High findings over the cap are still listed
 in the report** (clearly marked "over cap — file next run / fix now"); only Medium/Low silently defer.
 
-### 6. Report
+### 6. Systemic escalation (recurring patterns)
+
+Before reporting, run the **pattern-promotion** check. If a finding this run is an instance of a
+*specific, encodable* security pattern this audit has already fixed or filed
+`config.audits.promoteThreshold` times (default 3) within `config.audits.promoteLookbackDays` (default
+90) — e.g. *"new HTTP clients keep being constructed with `verify=False`"* — file **one** human-gated
+issue proposing the pattern become a rule in `config.guidelines.invariants` / `config.guidelines.coding`,
+rather than only fixing the instance again. If the rule already exists and keeps being violated, the
+proposal should ask for a **mechanical guard** (a `semgrep`/`bandit` rule, a CI grep) instead of more
+prose. Full mechanism, history queries, dedup marker, and template live in
+[`../../reference/pattern-promotion.md`](../../reference/pattern-promotion.md); this audit's
+`<audit-name>` is `security` and its branch prefix is `sec-`. The proposal is **in addition to** the
+normal fix, does **not** count against the caps, and is capped at one per run. Never auto-edit the
+guideline — propose; the maintainer decides. (This never applies to committed-secret findings — those
+are handled per [Handling secrets safely](#handling-secrets-safely), not promoted.)
+
+### 7. Report
 
 ```text
 Security audit — <YYYY-MM-DD>   (repo: <config.repo>, language: <config.language>)
@@ -161,6 +178,8 @@ Findings: <total>   (Critical <n> · High <n> · Medium <n> · Low <n>)
   Over cap (NOT yet filed): <finding> (Critical) — recommend fixing now
 
 Secrets: <0, or "see direct alert — N redacted finding(s), NOT posted publicly">
+
+Systemic: proposed encoding <pattern> as a rule in <guideline file> — issue #NNN (seen <N>× in <days>d)
 
 No findings in: <clean categories>     Not scanned: <categories with no tool>
 ```
@@ -195,6 +214,7 @@ A leaked secret is the one finding where the *audit itself* can make things wors
 - **Don't bump a dependency across a major version "to fix a CVE"** without checking it builds and
   tests pass — that's an issue (breaking-change review), not a mechanical PR.
 - **Don't operate on a dirty tree, skip pre-flight, `--no-verify`, or auto-merge.**
+- **Don't auto-edit the guidelines.** When a security pattern recurs past the threshold, *propose* the rule (or a mechanical guard, if the rule already exists) as an issue (step 6); the maintainer decides. One promotion per run, never for secrets, never re-propose one closed Not planned.
 
 ## When integrated with scheduling
 
@@ -203,3 +223,7 @@ discrete ones). Schedule it its own slot (e.g. nightly) via the `schedule` skill
 directly. Pairs with `audit-architecture` (structure), `audit-tests` (test quality), and
 `audit-deps` (dependency freshness/licensing — the non-security side of dependencies); each dedups
 against its own label/branch prefix, so running them together is fine.
+
+**Model tier:** taint paths and "don't 'fix' what you don't understand" are the highest-stakes
+judgment in the audit suite — schedule on the **`capable`** tier and never down-tier security to save
+tokens. See [`../../../core/reference/model-tiers.md`](../../../core/reference/model-tiers.md).

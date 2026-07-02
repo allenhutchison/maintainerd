@@ -66,6 +66,8 @@ The bot comment **marker** is `config.autoDev.marker` (default `<!-- auto-dev --
 
 **Overlap & isolation.** With no lockfile, the scheduled task must not overlap its own runs — set the cadence comfortably longer than a typical tick (a tick that builds can take many minutes). The label state machine is the backstop (work is claimed by swapping to In-progress, and at most one PR is ever in flight), but two truly concurrent ticks could still race when picking the oldest Ready issue, so don't schedule tighter than a tick can finish. Each scheduled run is its own disposable sandbox, so runs never share a working tree.
 
+**Model tier.** A tick drafts plans, writes code, and adjudicates review feedback — schedule it on the **`capable`** tier; don't down-tier to save tokens on its triage pass, because the *same* run also builds (a skill can't switch its own model mid-run). The read-only **`dry-run`** mode does no judgment or code-gen and is safe on the **`fast`** tier. See [`../../../core/reference/model-tiers.md`](../../../core/reference/model-tiers.md).
+
 ## Label state machine
 
 | State        | Meaning                                                                                                                                     | Who sets it                                           |
@@ -138,7 +140,7 @@ For issues labeled In-progress:
 
 If an automated PR is open, this tick belongs to it.
 
-**Draft PR** (a yielded partial build from step 3): resume the implementation first — finish the plan, run the full pre-flight, push, and mark it ready with `gh pr ready`. Only then does the review loop below apply.
+**Draft PR** (a yielded partial build from step 3): resume the implementation first — finish the plan, run the full pre-flight, **behaviorally verify it (step 3, item 6)**, push, and mark it ready with `gh pr ready` (subject to the same verification gate — never mark ready on a failing or silently-skipped verification). Only then does the review loop below apply.
 
 **Ready PR**: run one round of the review loop. The `coderabbit-review` skill describes the same loop in more depth — follow it when it is available (it may not be installed in a scheduled sandbox); the essentials below stand alone:
 
@@ -160,10 +162,15 @@ Take the **oldest** Ready issue (or a step-1 orphan). Then:
 3. Implement the approved plan as posted on the issue — the plan comment is the spec. Where reality diverges from the plan (an approach doesn't work, a file moved), prefer small sensible adaptation and document the deviation in the PR body; for a fundamental divergence, stop, comment on the issue explaining the blocker (marker), revert the label to Planned, and exit.
 4. Follow the repo's documentation policy — docs updates ship in the same PR.
 5. Run the full pre-flight: `config.commands.format`, `config.commands.build`, `config.commands.test`, `config.commands.typecheck` (skip any whose value is `null`). All green before pushing.
-6. Create the PR. **If the `create-pr` skill is installed, delegate to it** (it enforces the template, checklist, and AI-disclosure section, and runs the same pre-flight). If it is not installed, run the pre-flight inline via `config.commands.*` (step 5 above) and open the PR directly with `gh pr create`. Honor `config.autoDev.openPrsAsDraft`: when `true`, open the PR as a draft (`gh pr create --draft`) and only mark it ready (`gh pr ready`) once it is complete and pre-flight is green. The body must include `Fixes #<N>`, the marker line, and a note that this PR was produced by the auto-dev pipeline from the approved plan.
-7. Comment on the issue (marker) linking the PR.
+6. **Behaviorally verify the change.** Green pre-flight proves the code compiles and the suite passes; it does **not** prove the change does what the issue asked. When the change has a runnable surface — a CLI command, an endpoint, a UI, an observable side effect (i.e. **not** a docs-only, test-only, or pure-refactor diff) — exercise it end-to-end and observe the behavior:
+   - **If the `/verify` skill is installed, invoke it** — it drives the affected flow and observes the result rather than trusting the diff. Also run any runtime/smoke gate the approved plan named, and any behavioral check `config.guidelines` documents.
+   - **Verified** → note what you exercised and observed in the PR body's test plan.
+   - **Observed wrong behavior** → that's a real defect, not a passing build: fix it, re-run pre-flight + verification, and only proceed once it passes. If it can't be made to pass within this run's budget, leave the PR a **draft** and say so in the exit report — don't mark it ready.
+   - **Can't verify in this sandbox** (no runtime, or it needs a service the sandbox lacks) → don't block the pipeline: say so plainly in the PR body (`behavioral verification not run in sandbox — needs manual check`) and in the exit report, then proceed pre-flight-gated. **Never claim verified when verification didn't run** — the same "not scanned, never clean" honesty the audits follow.
+7. Create the PR. **If the `create-pr` skill is installed, delegate to it** (it enforces the template, checklist, and AI-disclosure section, and runs the same pre-flight — but not behavioral verification, which is step 6's job). If it is not installed, run the pre-flight inline via `config.commands.*` (step 5 above) and open the PR directly with `gh pr create`. Honor `config.autoDev.openPrsAsDraft`: when `true`, open the PR as a draft (`gh pr create --draft`) and only mark it ready (`gh pr ready`) once it is complete, pre-flight is green, **and** behavioral verification has passed (or been honestly recorded as not-run-in-sandbox). The body must include `Fixes #<N>`, the marker line, and a note that this PR was produced by the auto-dev pipeline from the approved plan.
+8. Comment on the issue (marker) linking the PR.
 
-If the build cannot complete within this run's time/effort budget, push the WIP commits and open a **draft** PR (`gh pr create --draft`) before exiting — a bare pushed branch is invisible to the next tick, whose discovery queries only look at PRs and issues. The draft body still carries `Fixes #<N>` and the marker, plus a note that the build is incomplete and will be resumed. Never mark a PR ready for review (`gh pr ready`) while pre-flight checks fail. (When `config.autoDev.openPrsAsDraft` is `true`, every PR already opens as a draft, so this incomplete-build path is just the normal flow held back from `gh pr ready`.)
+If the build cannot complete within this run's time/effort budget, push the WIP commits and open a **draft** PR (`gh pr create --draft`) before exiting — a bare pushed branch is invisible to the next tick, whose discovery queries only look at PRs and issues. The draft body still carries `Fixes #<N>` and the marker, plus a note that the build is incomplete and will be resumed. Never mark a PR ready for review (`gh pr ready`) while pre-flight checks fail, or while behavioral verification is failing, or — for a change with a runnable surface — while it was skipped without recording *why* it couldn't run (a genuine sandbox limitation, honestly noted, is allowed to proceed; silently skipping is not). (When `config.autoDev.openPrsAsDraft` is `true`, every PR already opens as a draft, so this incomplete-build path is just the normal flow held back from `gh pr ready`.)
 
 ### Step 4 — Triage pass (bounded)
 
@@ -276,6 +283,8 @@ actions:
 - #151: proposed parking (design fork is the maintainer's call) → needs-info
 - #152: maintainer replied "park it" → parked
 - PR #210: fixed 2 CodeRabbit findings, replied to 4 threads, pushed <sha>
+- #160: built approved plan → PR #211; verified via /verify (drove the new CLI flag, observed expected output) → marked ready
+- #163: built approved plan → PR #212 (draft); behavioral verification not run in sandbox (needs a live DB) — flagged for manual check
 blocked on human:
 - PR #210 awaiting review/merge
 - #145 ready to build once #210 merges
@@ -294,10 +303,12 @@ errors: <none | details>
 - Don't close issues, edit issue bodies, or modify human comments.
 - Don't expand a PR's scope in response to review; file a follow-up issue instead.
 - Don't bypass failing checks (`--no-verify`, skipping tests) to get a PR out.
+- Don't mark a PR ready on green pre-flight alone when the change has a runnable surface — behaviorally verify it (step 3, item 6) first, or honestly record why it couldn't run in the sandbox. Never claim "verified" when nothing was actually exercised.
 - Don't reach for any of the self-enforced hard prohibitions (invariant 5) — there is no external allowlist to catch you now, so the skill's own discipline is the only guardrail. If a tick seems to require one, stop and report it in the exit report instead.
 
 ## Related skills
 
 - **review-queue** — the maintainer's daily console for this pipeline: the **human half** of auto-dev. It gathers everything blocked on the maintainer (the open automated PR, plans awaiting approval, questions and park proposals, parked issues, untriaged issues) and feeds their decisions back into the same state machine **as the human** (never with the marker). Use it to approve plans, answer questions, and park/merge.
-- **create-pr** — the PR-creation skill step 3 delegates to when installed (template, CI gates, docs policy).
+- **create-pr** — the PR-creation skill step 3 delegates to when installed (template, CI gates, docs policy). It runs the command pre-flight but **not** behavioral verification — that stays auto-dev's own step-3 gate.
+- **verify** — the harness skill step 3 (item 6) invokes when installed to drive the built change end-to-end and observe behavior before the PR is marked ready, rather than trusting a green pre-flight. May be absent in a scheduled sandbox; when it is, record the change as manually-verify-needed rather than claiming it verified.
 - **bootstrap** — generates `.claude/maintainerd.json`, including the `autoDev` block this skill reads.

@@ -105,7 +105,8 @@ in doubt, ask.
 
 Defaults to apply without asking (state them in the report):
 - `labels`: `architecture` / `test-quality` / `security` / `dependencies` / `automated`.
-- `audits`: `3 / 5 / 2 / 2`.
+- `audits`: caps `3 / 5 / 2 / 2 / 3 / 5 / 3 / 5`; pattern promotion `promoteThreshold` 3, `promoteLookbackDays` 90.
+- `models` *(optional)*: write the tier scaffold with every tier set to `"inherit"` (no behavior change until the maintainer binds `fast`/`capable` to real model ids — point them at [`../../reference/model-tiers.md`](../../reference/model-tiers.md)). Omitting the block entirely is equally valid.
 - `autoDev` label names: the `auto:*` set from the schema.
 - `autoDev.excludedLabels`: `["epic", "question", "wontfix", "duplicate", "invalid"]`.
 
