@@ -40,7 +40,14 @@
     "securityPrCap": 3,
     "securityIssueCap": 5,
     "depsPrCap": 3,
-    "depsIssueCap": 5
+    "depsIssueCap": 5,
+    "promoteThreshold": 3,
+    "promoteLookbackDays": 90
+  },
+  "models": {
+    "fast": "claude-haiku-4-5",
+    "capable": "claude-opus-4-8",
+    "default": "inherit"
   },
   "dailyUpdate": {
     "subSkills": ["daily-changelog", "audit-design-docs"],

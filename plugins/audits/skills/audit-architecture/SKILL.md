@@ -18,7 +18,7 @@ Before doing anything else, load the repo config (see [`../../../core/reference/
    > This repo has no `.claude/maintainerd.json`. Run `/bootstrap` to generate it, then re-run me.
 
    Do not guess values or hardcode another repo's settings.
-3. Read the keys this skill uses: `config.repo`, `config.defaultBranch`, `config.language`, `config.paths.source`, `config.paths.tests`, `config.paths.skillsDir`, `config.commands.format`/`lint`/`build`/`test`, `config.guidelines.invariants`, `config.guidelines.coding`, `config.labels.architecture`, `config.labels.automated`, `config.audits.prCap`, `config.audits.issueCap`. Treat any `null` command as *"this repo has no such step — skip it"*. For any key that is **absent**, fall back to the documented default (caps default to 3 PRs / 5 issues) and mention the fallback in your run report.
+3. Read the keys this skill uses: `config.repo`, `config.defaultBranch`, `config.language`, `config.paths.source`, `config.paths.tests`, `config.paths.skillsDir`, `config.commands.format`/`lint`/`build`/`test`, `config.guidelines.invariants`, `config.guidelines.coding`, `config.labels.architecture`, `config.labels.automated`, `config.audits.prCap`, `config.audits.issueCap`, `config.audits.promoteThreshold`, `config.audits.promoteLookbackDays`. Treat any `null` command as *"this repo has no such step — skip it"*. For any key that is **absent**, fall back to the documented default (caps default to 3 PRs / 5 issues; pattern-promotion defaults to a threshold of 3 within 90 days) and mention the fallback in your run report.
 
 Throughout this skill, `config.<path>` refers to a value from that file. In the detection commands below, `config.paths.source` stands for your configured source root (e.g. `src/pepper/` or `src/`) and `config.paths.tests` your test root — substitute the literal value when you run them.
 
@@ -289,7 +289,22 @@ EOF
 
 **Stop at `config.audits.issueCap` issues.** Remaining findings are deferred to the next run. Capture them in the report so the human caller knows the backlog is growing.
 
-### 7. Report
+### 7. Systemic escalation (recurring patterns)
+
+Before reporting, run the **pattern-promotion** check — the loop that turns a nightly treadmill into
+a ratchet. If this run's finding is an instance of a *specific, encodable pattern* this audit has
+already fixed or filed `config.audits.promoteThreshold` times (default 3) within
+`config.audits.promoteLookbackDays` (default 90), file **one** human-gated issue proposing the pattern
+become a rule in `config.guidelines.invariants` (load-bearing/structural patterns) or
+`config.guidelines.coding` (conventions like logger-not-`print`, typing style) — or, if the rule
+already exists and keeps being violated, a **mechanical guard** (a lint rule / CI check) instead —
+rather than only fixing the instance again. The full mechanism, history queries, dedup marker, and issue template live
+in [`../../reference/pattern-promotion.md`](../../reference/pattern-promotion.md); this audit's
+`<audit-name>` is `architecture` and its branch prefix is `arch-`. This proposal is **in addition to**
+the normal fix, does **not** count against the PR/issue caps, and is capped at one per run. Never
+auto-edit the guideline file — propose; the maintainer decides.
+
+### 8. Report
 
 Reply to the caller with a structured summary:
 
@@ -317,6 +332,8 @@ Deferred (will retry next run):
 
 Pre-flight failures (PRs not opened):
 - arch-any-loop-types — tests failed on <test> (unrelated)
+
+Systemic: proposed encoding <pattern> as a rule in <guideline file> (or a mechanical guard if the rule already exists) — issue #NNN (seen <N>× in <days>d)
 
 No findings in: <list of categories that came up clean>
 ```
@@ -356,9 +373,12 @@ Tune the per-run caps (`config.audits.prCap` / `config.audits.issueCap`) downwar
 - **Don't operate on a dirty working tree.** A pre-existing diff in tracked source/test/doc paths means a human is mid-work; back off and report. Untracked skill scaffolding under `config.paths.skillsDir` is the one exception — see step 1.
 - **Don't bypass the per-run caps** "just this once." The caps exist to keep the review burden sustainable; the next run will pick up the deferred findings.
 - **Don't auto-merge.** Even green CI doesn't mean a refactor is right. Every PR this skill opens waits for human review and merge.
+- **Don't auto-edit `invariants.md`/`coding.md`.** When a pattern recurs past the threshold, *propose* the rule as an issue (step 7); the maintainer edits the guideline. Never file more than one promotion per run, and never re-propose one closed Not planned.
 
 ## When integrated with scheduling
 
 This skill is **not** part of the `daily-update` meta-skill, because `daily-update` bundles its work into one PR and this skill explicitly opens many. Schedule it as its own slot (e.g. nightly at 2am local time) via the `schedule` skill. The schedule should invoke this skill directly; there is no autonomous-prompt variant — pass a literal `/audit-architecture` or equivalent.
 
 If the user is running short on `/schedule` slots and wants to combine with `daily-update`, the right consolidation is to have this skill run *first*, produce its PRs/issues, and then let `daily-update` run its own one-PR sweep on top — but they remain logically separate runs from the maintainer's point of view.
+
+**Model tier:** DRY/abstraction judgment, invariant drift, and PR-vs-issue routing are judgment-heavy — schedule this on the **`capable`** tier (a smaller model mis-routes and over-files). See [`../../../core/reference/model-tiers.md`](../../../core/reference/model-tiers.md).

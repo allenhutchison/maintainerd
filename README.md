@@ -88,7 +88,7 @@ maintainerd/
   plugins/
     core/      .claude-plugin/plugin.json  skills/{bootstrap,doctor}/  reference/config-schema.md
     repo-ops/  .claude-plugin/plugin.json  skills/{create-pr,address-review,code-review,release,daily-changelog,daily-update}/
-    audits/    .claude-plugin/plugin.json  skills/{audit-architecture,audit-tests,audit-security,audit-deps,audit-design-docs,audit-product-docs}/
+    audits/    .claude-plugin/plugin.json  skills/{audit-architecture,audit-tests,audit-security,audit-deps,audit-design-docs,audit-product-docs}/  reference/pattern-promotion.md
     research/  .claude-plugin/plugin.json  skills/{research-radar}/
     journal/   .claude-plugin/plugin.json  skills/{worklog}/
     auto-dev/  .claude-plugin/plugin.json  skills/{create-issue,auto-dev,review-queue}/

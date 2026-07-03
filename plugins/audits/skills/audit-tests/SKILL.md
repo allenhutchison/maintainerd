@@ -33,6 +33,7 @@ Before anything else, load the repo config (see
    - `config.commands.format` / `config.commands.lint` — pre-flight gates (skip any that are `null`).
    - `config.labels.testQuality` / `config.labels.automated` — labels applied to every PR/issue this skill opens.
    - `config.audits.testPrCap` / `config.audits.testIssueCap` — per-run caps (default **2 / 2** if absent; note the fallback in your report).
+   - `config.audits.promoteThreshold` / `config.audits.promoteLookbackDays` — pattern-promotion knobs (default **3** within **90** days if absent). See step 7.
    - `config.guidelines.testing` — **the repo's own test conventions.** Read this file in full; it holds the repo-specific rules (the DB/fixture pattern, what may and may not be mocked, isolation rules, assertion expectations, redundant framework boilerplate, naming) that this skill checks the suite against. If it's missing or still full of `TODO` markers, say so in your report and proceed with the language-generic checks only.
 
 Treat a `null` command as **"this repo has no such step — skip it, don't invent one."**
@@ -291,9 +292,24 @@ _Filed by the `audit-tests` skill. If this isn't worth doing, close with
 
 **Stop at `config.audits.testIssueCap` issues.** Defer the rest to the next run.
 
-### 7. Report — only if there's something to say
+### 7. Systemic escalation (recurring patterns)
 
-- **Zero findings** (the common case): **say nothing and open nothing.** No PR, no issue, no "looks good" note. When invoked by a scheduled agent, a silent run is success. (If invoked interactively, a single line — "Test suite looks healthy; nothing to fix." — is fine; under automation, stay quiet.)
+Before reporting, run the **pattern-promotion** check. If a finding this run is an instance of a
+*specific, encodable* test-quality pattern this audit has already fixed or filed
+`config.audits.promoteThreshold` times (default 3) within `config.audits.promoteLookbackDays` (default
+90) — e.g. *"new tests keep mocking the DB session instead of using the `db` fixture"* — file **one**
+human-gated issue proposing the pattern become a rule in `config.guidelines.testing` — or, if the
+rule already exists and keeps being violated, a **mechanical guard** (a lint rule / CI check) instead
+— rather than only fixing the instance again. Full mechanism, history queries, dedup marker, and template live in
+[`../../reference/pattern-promotion.md`](../../reference/pattern-promotion.md); this audit's
+`<audit-name>` is `tests` and its branch prefix is `audit-tests-`. The proposal is **in addition to**
+the normal fix, does **not** count against the caps, and is capped at one per run. Never auto-edit the
+guideline — propose; the maintainer decides. **Silent-on-clean exception:** a run that files a
+promotion *does* report it (below) even if it opened no PRs/issues — a promotion is something to say.
+
+### 8. Report — only if there's something to say
+
+- **Zero findings** (the common case): **say nothing and open nothing.** No PR, no issue, no "looks good" note. When invoked by a scheduled agent, a silent run is success. (If invoked interactively, a single line — "Test suite looks healthy; nothing to fix." — is fine; under automation, stay quiet.) The one exception: if step 7 filed a **pattern-promotion** proposal, report that (a promotion is worth surfacing even on an otherwise-quiet run).
 - **Findings actioned:** a short structured summary, only listing what changed:
 
 ```text
@@ -308,6 +324,7 @@ Issues filed:
 
 Deferred (over cap, next run): <n> — <one-line each>
 Pre-flight abandoned (unrelated failure): <branch> — <reason>
+Systemic: proposed encoding <pattern> as a rule in config.guidelines.testing (or a mechanical guard if the rule already exists) — issue #NNN (seen <N>× in <days>d)
 ```
 
 ## Calibrating scope
@@ -327,10 +344,13 @@ A healthy suite produces **0 findings on most runs** — that's the steady state
 - **Don't bundle findings.** One test smell per PR. "Misc test cleanup" is unreviewable.
 - **Don't re-file a `wontfix`.** Check closed-not-planned `config.labels.testQuality` issues first.
 - **Don't auto-merge or `--no-verify`.** Every PR waits for human review; pre-flight always runs.
+- **Don't auto-edit `testing.md`.** When a test-quality pattern recurs past the threshold, *propose* the rule as an issue (step 7); the maintainer edits the guideline. One promotion per run, never re-propose one closed Not planned.
 
 ## When integrated with scheduling
 
 Schedule this as its own slot (a few times a day is fine given the silent-on-clean + low-cap design), invoking it directly (`/audit-tests` or equivalent) — there is no autonomous-prompt variant. It is intentionally **separate** from both `daily-update` (which bundles its work into one PR; this skill opens discrete ones) and `audit-architecture` (which owns the source side). Running both audits is fine; they don't overlap and each dedups against its own label/branch prefix.
+
+**Model tier:** "is this mock decorative? is this assertion actually weak?" is judgment — schedule on **`capable`**, or on a **`mid`** rung if the repo defines one (this runs several times a day, so the cost trade is real). See [`../../../core/reference/model-tiers.md`](../../../core/reference/model-tiers.md).
 
 ## Related skills
 
@@ -339,3 +359,4 @@ Schedule this as its own slot (a few times a day is fine given the silent-on-cle
 - `code-review` — the on-demand reviewer for a specific diff; this skill is the scheduled, test-only sweep.
 - `audit-design-docs` / `audit-product-docs` — the doc-side audits; same FIX-FIRST, capped, dedup-aware shape, different surface.
 - `bootstrap` — generates the `.claude/maintainerd.json` and `config.guidelines.testing` this skill reads.
+- [`pattern-promotion.md`](../../reference/pattern-promotion.md) — the shared step-7 mechanism for proposing a recurring test-quality pattern become a rule in `config.guidelines.testing`.

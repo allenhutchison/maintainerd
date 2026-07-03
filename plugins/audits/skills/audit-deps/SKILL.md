@@ -187,3 +187,7 @@ never a clean bill of health.
 Like the other audits, **not** part of `daily-update`. Schedule it its own slot via the `schedule`
 skill, invoking it directly. Pairs with `audit-security` (vulnerabilities — the security side of the
 same dependency set) and the code audits; each dedups against its own label/branch prefix.
+
+**Model tier:** this is the most mechanical audit (run analyzers, parse, batch bumps) — schedule it
+on the **`fast`** tier, escalating only a specific replacement/license decision to `capable` if
+needed. See [`../../../core/reference/model-tiers.md`](../../../core/reference/model-tiers.md).

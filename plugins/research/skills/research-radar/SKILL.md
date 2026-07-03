@@ -266,6 +266,10 @@ Runs in its own weekly `/schedule` slot (e.g. Monday morning). It is intentional
 `daily-update` — that bundles per-*day* skills, and this is weekly. If more weekly skills appear
 later, mint a `weekly-update` meta-skill on the `daily-update` pattern and move this behind it.
 
+**Model tier:** deriving themes and curating relevance is judgment — schedule on **`capable`** (or a
+**`mid`** rung if defined); the arXiv fetch/parse is cheap but can't be split from the same run. See
+[`../../../core/reference/model-tiers.md`](../../../core/reference/model-tiers.md).
+
 ## Related skills
 
 - `bootstrap` — generates the `.claude/maintainerd.json` this skill reads.
