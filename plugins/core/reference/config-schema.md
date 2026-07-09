@@ -132,7 +132,9 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
       "skip":       "auto:skip"
     },
     "excludedLabels": ["epic", "question", "wontfix", "duplicate", "invalid"], // never auto-build these
-    "openPrsAsDraft": true
+    "openPrsAsDraft": true,
+    "prLabel":        "auto:pr",  // applied to every PR the pipeline opens, so external tooling (e.g. CodeRabbit) can treat automated PRs specially. Distinct from labels.automated (which the audits also use). Must already exist; bootstrap creates it.
+    "fallbackReviewMinutes": 60   // how long a ready, CI-green automated PR may sit with zero review activity before auto-dev posts a fallback self-review (CodeRabbit normally reviews within minutes; past this, assume it's rate-limited). Default 60 if absent.
   },
 
   // ── research-radar ─────────────────────────────────────────────────────────
@@ -228,6 +230,12 @@ Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
   `{date}` in `commitSubject` is replaced with the ISO date.
 - `autoDev.*` — the `auto:*` state-machine label names, the bot comment `marker`, the branch
   prefix, the labels that exclude an issue from auto-building, and whether PRs open as drafts.
+  `prLabel` *(default `auto:pr`)* is stamped on **every** PR the pipeline opens so external tooling
+  (e.g. a CodeRabbit config) can single out automated PRs — it's deliberately separate from the
+  generic `labels.automated` the audits share. `fallbackReviewMinutes` *(default `60`)* is how long
+  a ready, CI-green automated PR may sit with no review activity before auto-dev posts a one-per-PR
+  **fallback self-review** to fill the gap when CodeRabbit is rate-limited. Both are optional; absent
+  → the documented defaults.
 - `researchRadar.themes` — `"derive"` to infer themes from the repo, or an explicit string array.
 - `review.bots` *(optional)* — extra automated-reviewer logins `address-review` should recognize.
   Defaults to `["coderabbitai[bot]", "gemini-code-assist[bot]"]`. Humans are auto-detected (any

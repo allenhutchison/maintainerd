@@ -109,6 +109,7 @@ Defaults to apply without asking (state them in the report):
 - `models` *(optional)*: write the tier scaffold with every tier set to `"inherit"` (no behavior change until the maintainer binds `fast`/`capable` to real model ids — point them at [`../../reference/model-tiers.md`](../../reference/model-tiers.md)). Omitting the block entirely is equally valid.
 - `autoDev` label names: the `auto:*` set from the schema.
 - `autoDev.excludedLabels`: `["epic", "question", "wontfix", "duplicate", "invalid"]`.
+- `autoDev.prLabel`: `auto:pr` (stamped on every automated PR); `autoDev.fallbackReviewMinutes`: `60`.
 
 Write `.claude/maintainerd.json` with the full schema. Every command the repo doesn't have must be
 explicit `null`, not omitted. Validate it parses:
@@ -154,7 +155,8 @@ gh label create test-quality --color D4C5F9 --description "audit-tests findings"
 gh label create security     --color D93F0B --description "audit-security findings" 2>/dev/null || true
 gh label create dependencies --color 0366D6 --description "audit-deps findings" 2>/dev/null || true
 gh label create automated    --color EDEDED --description "Opened by a Maintainerd skill" 2>/dev/null || true
-# auto:* labels only if auto-dev is enabled
+# auto:* labels only if auto-dev is enabled — the auto:* state set plus the auto-dev PR label:
+gh label create auto:pr      --color 5319E7 --description "Opened by the auto-dev pipeline" 2>/dev/null || true
 ```
 
 Ask before creating; don't mutate the repo's label set unprompted.
