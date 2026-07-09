@@ -74,7 +74,8 @@ gh label list --repo <config.repo> --json name --jq '.[].name'
 ```
 Every label in `config.labels.*` must exist. Missing → **FAIL** (the skill's `gh ... --label` call
 errors at runtime). With `--fix`, offer to create the missing ones (same `gh label create` as
-`bootstrap`). If `config.autoDev.enabled`, the `config.autoDev.stateLabels.*` must also exist.
+`bootstrap`). If `config.autoDev.enabled`, the `config.autoDev.stateLabels.*` and `config.autoDev.prLabel`
+(default `auto:pr`) must also exist.
 
 ### 7. daily-update roster
 Every skill in `config.dailyUpdate.subSkills` must be installed/available (a Maintainerd skill name,
@@ -84,6 +85,9 @@ will try to invoke a missing skill"). Cross-check against the plugins actually i
 ### 8. auto-dev coherence (only if `config.autoDev.enabled`)
 - All six `stateLabels.*` exist on GitHub (covered in check 6).
 - `marker` is a non-empty HTML comment; `branchPrefix` is set; `excludedLabels` is an array.
+- `prLabel` (default `auto:pr` if absent) exists on GitHub — the pipeline stamps it on every PR, so a
+  missing label means every build's label step fails → **WARN** with the `gh label create` fix.
+- `fallbackReviewMinutes` (default `60` if absent), when present, is a positive number → else **WARN**.
 - If `autoDev.enabled` is `false`, skip — note it as a PASS ("auto-dev disabled").
 
 ### 9. release coherence

@@ -220,7 +220,11 @@ you later.
 **The open automated PR:**
 
 - **Surface** its CI rollup, CodeRabbit/human review threads, and mergeable state (`gh pr view`,
-  `gh pr checks`, the reviews/comments APIs — all with `--repo config.repo`).
+  `gh pr checks`, the reviews/comments APIs — all with `--repo config.repo`). **Flag the review
+  provenance:** if the PR's only review signal is the pipeline's own **fallback self-review** (an
+  `auto:pr`-labeled PR whose sole review is a marker comment headed `## Fallback review`, with no
+  external CodeRabbit or human review), say so plainly — "self-reviewed only, no external review" —
+  so you give it a closer look before merging. A self-review is a signal, not independent sign-off.
 - **Review deeper** → hand off to the user-level `coderabbit-review` skill or `/code-review`; don't
   reimplement a review here.
 - **Leave feedback** → post review comments **as you** (no marker). The next tick addresses them and

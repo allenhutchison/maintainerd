@@ -67,7 +67,9 @@
       "skip": "auto:skip"
     },
     "excludedLabels": ["epic", "question", "wontfix", "duplicate", "invalid"],
-    "openPrsAsDraft": true
+    "openPrsAsDraft": true,
+    "prLabel": "auto:pr",
+    "fallbackReviewMinutes": 60
   },
   "researchRadar": {
     "themes": "derive",

@@ -24,7 +24,10 @@ Before anything else, load the repo config (see
 4. Read the keys this skill needs: `config.repo`, `config.defaultBranch`, `config.commands.*`
    (`format`, `lint`, `build`, `typecheck`, `test`), `config.guidelines` (its behavioral/smoke
    checks feed step 3's verification — item 6), and the whole `config.autoDev` block —
-   `branchPrefix`, `marker`, `stateLabels.*`, `excludedLabels`, and `openPrsAsDraft`.
+   `branchPrefix`, `marker`, `stateLabels.*`, `excludedLabels`, `openPrsAsDraft`, `prLabel`
+   (the label stamped on every automated PR — default `auto:pr` if absent), and
+   `fallbackReviewMinutes` (how long a PR may sit unreviewed before the fallback self-review —
+   default `60` if absent).
 5. Treat a `null` command as **"this repo has no such step — skip it, don't invent one."**
 
 Throughout this skill, every `auto:*` label, the bot comment marker, and the `auto/issue-` branch
@@ -56,7 +59,7 @@ The bot comment **marker** is `config.autoDev.marker` (default `<!-- auto-dev --
 2. **At most one automated PR in flight.** While any auto-dev PR is open, no new issue gets built. Ticks spent in that state only advance the open PR.
 3. **All runs happen under the maintainer's own GitHub identity**, so authorship cannot distinguish this pipeline from the human. Every comment this skill posts MUST begin with `config.autoDev.marker` (an HTML comment, invisible in rendered Markdown). Classify comments into three buckets: **pipeline** (has the marker), **third-party bot** (author login ends in `[bot]` or `app/` — e.g. `coderabbitai`, `dependabot`; CodeRabbit posts auto-enrichment boilerplate on issues), and **human** (everything else). Only _human_ comments count as replies, answers, or approvals; third-party bot comments never satisfy "the human replied" and never gate-keep anything — read them for technical signal at most.
 4. **Labels are the cross-run memory, and humans always win.** If a human has changed a state label since the last tick (e.g. removed Ready, added Skip), respect the label as found — never "correct" it back.
-5. **Self-enforced hard prohibitions.** There is no external permission allowlist — this skill is the only guardrail, so treat the following as absolute and, if a tick ever seems to need one, stop and report it instead of doing it: never merge, close, or reopen any PR or issue; never force-push, and never push to `config.defaultBranch` directly; never run the release process (version bumps, publishes, `gh release …`); never create, delete, or edit labels (only **apply or remove the state labels** named in `config.autoDev.stateLabels`); never edit or delete human comments; never delete the repo, issues, or `gh api -X DELETE` anything; never run destructive or privileged shell (`rm -rf` outside the throwaway build sandbox, `sudo`, or `curl`/`wget` to exfiltrate). Working-tree resets are allowed **only** in the disposable scheduled sandbox (Step 0), never in an interactive checkout.
+5. **Self-enforced hard prohibitions.** There is no external permission allowlist — this skill is the only guardrail, so treat the following as absolute and, if a tick ever seems to need one, stop and report it instead of doing it: never merge, close, or reopen any PR or issue; never force-push, and never push to `config.defaultBranch` directly; never run the release process (version bumps, publishes, `gh release …`); never create, delete, or edit labels (only **apply or remove the state labels** named in `config.autoDev.stateLabels`, and **apply** the PR label `config.autoDev.prLabel` to automated PRs — both must already exist; bootstrap creates them); never submit a formal GitHub review of any kind on the pipeline's own PRs (the fallback self-review in step 2 is a plain comment, never an approval or request-changes); never edit or delete human comments; never delete the repo, issues, or `gh api -X DELETE` anything; never run destructive or privileged shell (`rm -rf` outside the throwaway build sandbox, `sudo`, or `curl`/`wget` to exfiltrate). Working-tree resets are allowed **only** in the disposable scheduled sandbox (Step 0), never in an interactive checkout.
 6. **Stay inside the repo's own conventions**: pre-flight checks, documentation policy, and the PR template all come from the `create-pr` skill and the repo's contributor docs, exactly as for human-driven work.
 
 ## Invocation modes
@@ -147,10 +150,28 @@ If an automated PR is open, this tick belongs to it.
 
 1. Fetch all four feedback surfaces: PR metadata + CI rollup, review summaries, inline review comments, and issue-style comments (`gh pr view`, `gh api repos/<config.repo>/pulls/N/reviews`, `.../pulls/N/comments`, `.../issues/N/comments`).
 2. **CI red?** Fix CI first — check out the automated branch, fix, run the repo pre-flight (`config.commands.format`, `config.commands.build`, `config.commands.test`, `config.commands.typecheck` — skip any whose value is `null`), push.
-3. **New feedback since the skill's last reply?** A thread is unaddressed if its newest comment lacks `config.autoDev.marker`. Triage each item on its merits (CodeRabbit is not always right), fix valid items with **focused commits** (one logical fix per commit, conventional subjects), push, then **reply to every thread** — including ones you decline, with a one-sentence reason. Replies carry the marker.
+3. **New feedback since the skill's last reply?** A thread is unaddressed if its newest comment lacks `config.autoDev.marker`. **Not feedback:** a third-party bot's auto-generated boilerplate — CodeRabbit rate-limit notices, walkthrough/summary comments, "finishing touches" checklists — identifiable by an HTML comment of the form `<!-- This is an auto-generated comment: … -->` in the body. Never reply to those and never count them as unaddressed feedback (a rate-limit notice matters only as the fallback-review trigger below). For real feedback, triage each item on its merits (CodeRabbit is not always right), fix valid items with **focused commits** (one logical fix per commit, conventional subjects), push, then **reply to every thread** — including ones you decline, with a one-sentence reason. Replies carry the marker.
 4. **Human feedback** outranks bot feedback. If a human reviewer and CodeRabbit conflict, follow the human and say so in the reply to the bot.
 5. **Scope creep requested in review?** Acknowledge in a reply, file a follow-up issue (it enters this same pipeline untriaged), link it, and keep the PR scoped.
-6. **Nothing new** (no new comments, CI green, all threads answered): the PR is waiting on review or merge. Print that in the exit report and **fall through to the triage pass (step 4, triage only)** — never build, since a PR is already in flight.
+6. **Nothing new** (no new comments, CI green, all threads answered): the PR is waiting on review or merge — *unless it qualifies for a fallback self-review*. Check the fallback conditions below; if they all hold, do the self-review this tick and stop. Otherwise the PR is genuinely quiescent: print that in the exit report and **fall through to the triage pass (step 4, triage only)** — never build, since a PR is already in flight.
+
+**Fallback self-review** (when CodeRabbit can't keep up): CodeRabbit normally reviews within minutes of a PR going ready; when it hits its rate limits it stays silent or posts only a rate-limit/"in queue" notice, and the PR would otherwise sit with no review signal at all, blocking the maintainer's merge decision. The pipeline reviews its own PR to fill that gap. A PR qualifies when **all** of these hold:
+
+- it is ready (not draft) and CI is green;
+- it has **no review activity from any human or third-party bot** — no reviews, no inline review comments. A CodeRabbit rate-limit notice does _not_ count as review activity: it arrives as an **issue-style comment** (not a review) whose body contains the line `<!-- This is an auto-generated comment: rate limited by coderabbit.ai -->`, and it often quotes a short "next review available in N minutes" — `config.autoDev.fallbackReviewMinutes` (default 60) deliberately overshoots those short waits, giving CodeRabbit several chances first;
+- it has been ready for review longer than `config.autoDev.fallbackReviewMinutes` (from the PR's `createdAt`, or the latest `ready_for_review` timeline event if it started as a draft);
+- it has no prior fallback self-review — no marker comment containing the `## Fallback review` heading. **At most one fallback self-review per PR**; that comment is the cross-tick memory.
+
+Then review it yourself:
+
+1. **Fresh-eyes adversarial review.** The pipeline wrote this diff, so don't trust the memory of writing it — re-read the full diff from scratch (`gh pr diff`) against the approved plan on the issue. **If the repo's `code-review` skill is installed, apply its standards**; otherwise review for correctness, error handling, edge cases, test coverage and quality, the repo's documentation policy, and the rules in `config.guidelines`. Actively look for reasons the change is wrong, not confirmation that it's right.
+2. **Fix what's real.** Valid findings get fixed now, in this tick: check out the automated branch, focused commits (one logical fix per commit), full pre-flight (`config.commands.*` — skip any whose value is `null`), push.
+3. **Post one summary comment** in the fallback-review format below: what was examined, findings fixed (with commit SHAs), and observations left to the maintainer's judgement. "No findings" is a valid, useful outcome — say it plainly rather than inventing nitpicks.
+4. **Never submit a formal GitHub review** — no approval, no request-changes, not even a comment-type review. The summary is an ordinary PR comment. A self-review is a signal for the maintainer, not independent sign-off, and must never be dressed up to look like one.
+
+After the fallback review is posted, the PR counts as quiescent. If CodeRabbit later catches up and reviews the PR, its feedback flows through the normal item-3 handling — the fallback review never suppresses or substitutes for a real external review.
+
+**Re-triggering CodeRabbit.** Its rate-limit notice offers two re-triggers: pushing new commits, or a `@coderabbitai review` comment. The fallback review's own fix-push therefore doubles as a re-trigger — desirable, since a real external review may follow. But **never post the `@coderabbitai review` trigger yourself**: a bare command comment from the maintainer's account without the marker would be classified by every later tick as human input (invariant 3), while adding the marker may break CodeRabbit's command parsing. The fallback summary instead reminds the maintainer they can trigger it manually.
 
 ### Step 3 — Build (only if NO automated PR is open)
 
@@ -168,7 +189,7 @@ Take the **oldest** Ready issue (or a step-1 orphan). Then:
    - **Verified** → note what you exercised and observed in the PR body's test plan.
    - **Observed wrong behavior** → that's a real defect, not a passing build: fix it, re-run pre-flight + verification, and only proceed once it passes. If it can't be made to pass within this run's budget, leave the PR a **draft** and say so in the exit report — don't mark it ready.
    - **Can't verify in this sandbox** (no runtime, or it needs a service the sandbox lacks) → don't block the pipeline: say so plainly in the PR body (`behavioral verification not run in sandbox — needs manual check`) and in the exit report, then proceed pre-flight-gated. **Never claim verified when verification didn't run** — the same "not scanned, never clean" honesty the audits follow.
-7. Create the PR. **If the `create-pr` skill is installed, delegate to it** (it enforces the template, checklist, and AI-disclosure section, and runs the same pre-flight — but not behavioral verification, which is step 6's job). If it is not installed, run the pre-flight inline via `config.commands.*` (step 5 above) and open the PR directly with `gh pr create`. Honor `config.autoDev.openPrsAsDraft`: when `true`, open the PR as a draft (`gh pr create --draft`) and only mark it ready (`gh pr ready`) once it is complete, pre-flight is green, **and** behavioral verification has passed (or been honestly recorded as not-run-in-sandbox). The body must include `Fixes #<N>`, the marker line, and a note that this PR was produced by the auto-dev pipeline from the approved plan.
+7. Create the PR. **If the `create-pr` skill is installed, delegate to it** (it enforces the template, checklist, and AI-disclosure section, and runs the same pre-flight — but not behavioral verification, which is step 6's job). If it is not installed, run the pre-flight inline via `config.commands.*` (step 5 above) and open the PR directly with `gh pr create`. Honor `config.autoDev.openPrsAsDraft`: when `true`, open the PR as a draft (`gh pr create --draft`) and only mark it ready (`gh pr ready`) once it is complete, pre-flight is green, **and** behavioral verification has passed (or been honestly recorded as not-run-in-sandbox). The body must include `Fixes #<N>`, the marker line, and a note that this PR was produced by the auto-dev pipeline from the approved plan. **Apply the PR label** `config.autoDev.prLabel` (default `auto:pr`) to every PR the pipeline opens — `gh pr edit <PR> --repo <config.repo> --add-label "<config.autoDev.prLabel>"` — so external tooling (e.g. CodeRabbit) can recognize and specially handle automated PRs. The label must already exist (bootstrap creates it); if applying it fails because it doesn't, note that in the exit report and continue — never create the label yourself (invariant 5). This label is applied on top of, not instead of, whatever `create-pr` does; it never replaces the state machine's `auto:*` labels.
 8. Comment on the issue (marker) linking the PR.
 
 If the build cannot complete within this run's time/effort budget, push the WIP commits and open a **draft** PR (`gh pr create --draft`) before exiting — a bare pushed branch is invisible to the next tick, whose discovery queries only look at PRs and issues. The draft body still carries `Fixes #<N>` and the marker, plus a note that the build is incomplete and will be resumed. Never mark a PR ready for review (`gh pr ready`) while pre-flight checks fail, or while behavioral verification is failing, or — for a change with a runnable surface — while it was skipped without recording *why* it couldn't run (a genuine sandbox limitation, honestly noted, is allowed to proceed; silently skipping is not). (When `config.autoDev.openPrsAsDraft` is `true`, every PR already opens as a draft, so this incomplete-build path is just the normal flow held back from `gh pr ready`.)
@@ -270,6 +291,34 @@ Want me to **park** it for now? Reply "park it" (or add the Parked label) and I'
 
 A parked issue is durable rest, not abandonment: the skill picks it back up the moment the maintainer removes the Parked label or adds a comment _after_ the park (a rationale left at park time is recorded but does not re-activate it — see the Parked triage branch).
 
+## Fallback review comment format
+
+Posted on a PR by step 2's fallback self-review. The `## Fallback review` heading is load-bearing — it is how later ticks detect that a fallback review already exists — so keep it verbatim. The first line is `config.autoDev.marker`.
+
+```markdown
+<!-- auto-dev -->
+
+## Fallback review
+
+No external review arrived within the review window (CodeRabbit appears rate-limited), so this is the pipeline's own fresh-eyes review of the diff against the approved plan. It is a **self-review** — treat it as a signal, not independent sign-off.
+
+**Examined:** <scope: files/areas reviewed, and what they were checked against>
+
+**Fixed in this review:**
+
+- <finding> — fixed in <sha>
+- _(or "nothing — no defects found")_
+
+**For your judgement:**
+
+- <observation or trade-off the maintainer should weigh before merging>
+- _(or "nothing flagged")_
+
+---
+
+CodeRabbit can be re-run on this PR at any time with a `@coderabbitai review` comment.
+```
+
 ## Exit report
 
 Every tick ends by printing a structured report — it is the run's summary output (the scheduled task surfaces it; an interactive run shows it inline):
@@ -284,7 +333,8 @@ actions:
 - #151: proposed parking (design fork is the maintainer's call) → needs-info
 - #152: maintainer replied "park it" → parked
 - PR #210: fixed 2 CodeRabbit findings, replied to 4 threads, pushed <sha>
-- #160: built approved plan → PR #211; verified via /verify (drove the new CLI flag, observed expected output) → marked ready
+- PR #212: no external review after 60m — self-reviewed, fixed 1 finding (<sha>), posted fallback review
+- #160: built approved plan → PR #211 (labeled auto:pr); verified via /verify (drove the new CLI flag, observed expected output) → marked ready
 - #163: built approved plan → PR #212 (draft); behavioral verification not run in sandbox (needs a live DB) — flagged for manual check
 blocked on human:
 - PR #210 awaiting review/merge
@@ -295,6 +345,10 @@ errors: <none | details>
 ## What not to do
 
 - Don't merge, approve, or enable auto-merge on any PR.
+- Don't submit a formal GitHub review of any kind on the pipeline's own PRs — the fallback self-review is a plain comment, never an approval or request-changes.
+- Don't post more than one fallback self-review per PR, and don't self-review a PR that already has human or third-party review activity — the fallback exists only to fill the gap when CodeRabbit can't keep up.
+- Don't reply to third-party bots' auto-generated notices (rate-limit, walkthrough, finishing-touches boilerplate), and don't post bot trigger commands like `@coderabbitai review` — a marker-less command comment reads as human input to every later tick.
+- Don't create the `config.autoDev.prLabel` label yourself — only apply it; bootstrap creates it. If it's missing, note it and continue.
 - Don't start a second build while an automated PR is open.
 - Don't post a second question/plan when the previous one is still unanswered.
 - Don't park an issue on your own initiative — only _propose_ parking; the maintainer parks by replying "park it" or adding the Parked label. (The Parked label is set by the skill solely on a human park reply, or by the human directly.)
@@ -312,4 +366,5 @@ errors: <none | details>
 - **review-queue** — the maintainer's daily console for this pipeline: the **human half** of auto-dev. It gathers everything blocked on the maintainer (the open automated PR, plans awaiting approval, questions and park proposals, parked issues, untriaged issues) and feeds their decisions back into the same state machine **as the human** (never with the marker). Use it to approve plans, answer questions, and park/merge.
 - **create-pr** — the PR-creation skill step 3 delegates to when installed (template, CI gates, docs policy). It runs the command pre-flight but **not** behavioral verification — that stays auto-dev's own step-3 gate.
 - **verify** — the harness skill step 3 (item 6) invokes when installed to drive the built change end-to-end and observe behavior before the PR is marked ready, rather than trusting a green pre-flight. May be absent in a scheduled sandbox; when it is, record the change as manually-verify-needed rather than claiming it verified.
+- **code-review** — the review-standards skill step 2's fallback self-review applies when installed, to review the pipeline's own diff with fresh, adversarial eyes when no external review (CodeRabbit) arrives within `config.autoDev.fallbackReviewMinutes`. May be absent in a scheduled sandbox; when it is, fall back to the generic review checklist named in the fallback subsection.
 - **bootstrap** — generates `.claude/maintainerd.json`, including the `autoDev` block this skill reads.
