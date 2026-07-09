@@ -134,7 +134,9 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
     "excludedLabels": ["epic", "question", "wontfix", "duplicate", "invalid"], // never auto-build these
     "openPrsAsDraft": true,
     "prLabel":        "auto:pr",  // applied to every PR the pipeline opens, so external tooling (e.g. CodeRabbit) can treat automated PRs specially. Distinct from labels.automated (which the audits also use). Must already exist; bootstrap creates it.
-    "fallbackReviewMinutes": 60   // how long a ready, CI-green automated PR may sit with zero review activity before auto-dev posts a fallback self-review (CodeRabbit normally reviews within minutes; past this, assume it's rate-limited). Default 60 if absent.
+    "fallbackReviewMinutes": 60,  // how long a ready, CI-green automated PR may sit with zero review activity before auto-dev posts a fallback self-review (CodeRabbit normally reviews within minutes; past this, assume it's rate-limited). Default 60 if absent.
+    "maxPrsInFlight": 1,          // how many automated PRs may be open at once. 1 = classic single-PR pipeline (an open PR blocks new builds until it merges). >1 lets the queue drain into several built-but-unmerged PRs awaiting review. Never merges/closes anything. Default 1 if absent.
+    "orphanReclaimMinutes": 90    // min age of a PR-less in-progress issue before a tick treats it as a crashed build (and rebuilds) rather than one running concurrently in an overlapping tick (and leaves it alone). Default 90 if absent.
   },
 
   // ── research-radar ─────────────────────────────────────────────────────────
@@ -234,8 +236,14 @@ Pointers to the markdown rule files. See [Guidelines files](#guidelines-files).
   (e.g. a CodeRabbit config) can single out automated PRs — it's deliberately separate from the
   generic `labels.automated` the audits share. `fallbackReviewMinutes` *(default `60`)* is how long
   a ready, CI-green automated PR may sit with no review activity before auto-dev posts a one-per-PR
-  **fallback self-review** to fill the gap when CodeRabbit is rate-limited. Both are optional; absent
-  → the documented defaults.
+  **fallback self-review** to fill the gap when CodeRabbit is rate-limited. `maxPrsInFlight`
+  *(default `1`)* caps how many automated PRs may be open at once — `1` is the classic single-PR
+  pipeline (an open PR blocks new builds until it merges); a higher cap lets the pipeline drain the
+  Ready queue into several built-but-unmerged PRs awaiting review (it still never merges or closes
+  anything). `orphanReclaimMinutes` *(default `90`)* is the minimum age of a PR-less in-progress
+  issue before a tick treats it as a crashed build to rebuild, rather than one running concurrently
+  in an overlapping tick (which it leaves alone) — the guard against two ticks racing on the same
+  build. All optional; absent → the documented defaults.
 - `researchRadar.themes` — `"derive"` to infer themes from the repo, or an explicit string array.
 - `review.bots` *(optional)* — extra automated-reviewer logins `address-review` should recognize.
   Defaults to `["coderabbitai[bot]", "gemini-code-assist[bot]"]`. Humans are auto-detected (any
