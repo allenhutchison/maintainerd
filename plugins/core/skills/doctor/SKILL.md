@@ -88,6 +88,8 @@ will try to invoke a missing skill"). Cross-check against the plugins actually i
 - `prLabel` (default `auto:pr` if absent) exists on GitHub — the pipeline stamps it on every PR, so a
   missing label means every build's label step fails → **WARN** with the `gh label create` fix.
 - `fallbackReviewMinutes` (default `60` if absent), when present, is a positive number → else **WARN**.
+- `maxPrsInFlight` (default `1` if absent), when present, is an integer ≥ 1 → else **WARN**.
+- `orphanReclaimMinutes` (default `90` if absent), when present, is a positive number → else **WARN**.
 - If `autoDev.enabled` is `false`, skip — note it as a PASS ("auto-dev disabled").
 
 ### 9. release coherence

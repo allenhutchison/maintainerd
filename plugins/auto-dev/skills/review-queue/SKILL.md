@@ -103,9 +103,10 @@ gh issue list --repo "$REPO" --state open --limit 200 \
 Bucket the open issues by their `auto:*` state (per the table above). For new/untriaged ones, apply
 the same eligibility exclusions auto-dev uses — the skip label
 (`config.autoDev.stateLabels.skip`) plus everything in `config.autoDev.excludedLabels` (e.g. `epic`,
-`question`, `wontfix`, `duplicate`, `invalid`) — and surface the rest. For the open PR, also pull its
-CI + review surfaces only when you choose to act on it (don't fetch all threads for every item up
-front — keep the gather cheap).
+`question`, `wontfix`, `duplicate`, `invalid`) — and surface the rest. For each open automated PR
+(there may be several when `config.autoDev.maxPrsInFlight` is above `1`), also pull its CI + review
+surfaces only when you choose to act on it (don't fetch all threads for every item up front — keep
+the gather cheap).
 
 To keep the list signal-dense, note how long each item has waited (from `updatedAt` / the relevant
 comment time) so stale items stand out.
@@ -118,7 +119,7 @@ line with the number and a 3–8 word gist of what's blocked on you:
 ```
 Pipeline review — <date>
 
-🔴 PR awaiting your review/merge (unblocks the next build)
+🔴 PRs awaiting your review/merge (each merge frees a build slot)
   • PR #986  per-use-case thinkingLevel — CI green, CodeRabbit approved, mergeable
 
 🟠 Plans awaiting approval (planned)              — approve → queues a build
@@ -173,8 +174,9 @@ you later.
 **A plan (planned — `config.autoDev.stateLabels.planned`):**
 
 - **Approve** ("approved", "lgtm", "go", "ship it") → add the ready label
-  (`config.autoDev.stateLabels.ready`). The oldest ready issue builds on the next tick with no PR in
-  flight.
+  (`config.autoDev.stateLabels.ready`). The oldest ready issue builds on the next tick whose open-PR
+  count is below the in-flight cap (`config.autoDev.maxPrsInFlight`; with the default of `1`, that
+  means the next tick with no automated PR open).
 - **Approve with a tweak** ("approved, but use X") → post your tweak as a plain comment, then add the
   ready label (the build adapts to the latest comment). If the change is large enough to reshape the
   plan, instead post the change and leave the planned label so the next tick re-plans — ask which you

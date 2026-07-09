@@ -110,6 +110,7 @@ Defaults to apply without asking (state them in the report):
 - `autoDev` label names: the `auto:*` set from the schema.
 - `autoDev.excludedLabels`: `["epic", "question", "wontfix", "duplicate", "invalid"]`.
 - `autoDev.prLabel`: `auto:pr` (stamped on every automated PR); `autoDev.fallbackReviewMinutes`: `60`.
+- `autoDev.maxPrsInFlight`: `1` (single-PR pipeline; raise it to let the queue drain into several open PRs); `autoDev.orphanReclaimMinutes`: `90`.
 
 Write `.claude/maintainerd.json` with the full schema. Every command the repo doesn't have must be
 explicit `null`, not omitted. Validate it parses:

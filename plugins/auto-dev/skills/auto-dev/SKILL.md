@@ -25,9 +25,12 @@ Before anything else, load the repo config (see
    (`format`, `lint`, `build`, `typecheck`, `test`), `config.guidelines` (its behavioral/smoke
    checks feed step 3's verification — item 6), and the whole `config.autoDev` block —
    `branchPrefix`, `marker`, `stateLabels.*`, `excludedLabels`, `openPrsAsDraft`, `prLabel`
-   (the label stamped on every automated PR — default `auto:pr` if absent), and
+   (the label stamped on every automated PR — default `auto:pr` if absent),
    `fallbackReviewMinutes` (how long a PR may sit unreviewed before the fallback self-review —
-   default `60` if absent).
+   default `60` if absent), `maxPrsInFlight` (how many automated PRs may be open at once —
+   default `1` if absent, i.e. the single-PR pipeline), and `orphanReclaimMinutes` (how old a
+   PR-less In-progress issue must be before a tick treats it as a crashed build rather than one
+   running concurrently — default `90` if absent).
 5. Treat a `null` command as **"this repo has no such step — skip it, don't invent one."**
 
 Throughout this skill, every `auto:*` label, the bot comment marker, and the `auto/issue-` branch
@@ -56,7 +59,7 @@ The bot comment **marker** is `config.autoDev.marker` (default `<!-- auto-dev --
 ## Invariants — read these first
 
 1. **Never merge a PR.** Not with `gh pr merge`, not via the API, not by enabling auto-merge. Merging is exclusively the maintainer's act, and a merge is what unblocks the pipeline for the next issue.
-2. **At most one automated PR in flight.** While any auto-dev PR is open, no new issue gets built. Ticks spent in that state only advance the open PR.
+2. **At most `config.autoDev.maxPrsInFlight` automated PRs in flight (default `1`).** Building is gated on the count of open automated PRs being _below_ this cap — not necessarily on zero. With the default of `1` this is the classic single-PR pipeline (while the one PR is open, no new issue gets built); a repo that sets a higher cap allows that many built-but-unmerged PRs to await review at once. While at the cap, no new issue is built; ticks either advance an open PR toward merge or groom the backlog. Merges remain exclusively the maintainer's act (invariant 1); this cap only widens how many built-but-unmerged PRs may await review — it never merges, auto-merges, or closes anything.
 3. **All runs happen under the maintainer's own GitHub identity**, so authorship cannot distinguish this pipeline from the human. Every comment this skill posts MUST begin with `config.autoDev.marker` (an HTML comment, invisible in rendered Markdown). Classify comments into three buckets: **pipeline** (has the marker), **third-party bot** (author login ends in `[bot]` or `app/` — e.g. `coderabbitai`, `dependabot`; CodeRabbit posts auto-enrichment boilerplate on issues), and **human** (everything else). Only _human_ comments count as replies, answers, or approvals; third-party bot comments never satisfy "the human replied" and never gate-keep anything — read them for technical signal at most.
 4. **Labels are the cross-run memory, and humans always win.** If a human has changed a state label since the last tick (e.g. removed Ready, added Skip), respect the label as found — never "correct" it back.
 5. **Self-enforced hard prohibitions.** There is no external permission allowlist — this skill is the only guardrail, so treat the following as absolute and, if a tick ever seems to need one, stop and report it instead of doing it: never merge, close, or reopen any PR or issue; never force-push, and never push to `config.defaultBranch` directly; never run the release process (version bumps, publishes, `gh release …`); never create, delete, or edit labels (only **apply or remove the state labels** named in `config.autoDev.stateLabels`, and **apply** the PR label `config.autoDev.prLabel` to automated PRs — both must already exist; bootstrap creates them); never submit a formal GitHub review of any kind on the pipeline's own PRs (the fallback self-review in step 2 is a plain comment, never an approval or request-changes); never edit or delete human comments; never delete the repo, issues, or `gh api -X DELETE` anything; never run destructive or privileged shell (`rm -rf` outside the throwaway build sandbox, `sudo`, or `curl`/`wget` to exfiltrate). Working-tree resets are allowed **only** in the disposable scheduled sandbox (Step 0), never in an interactive checkout.
@@ -68,7 +71,7 @@ The bot comment **marker** is `config.autoDev.marker` (default `<!-- auto-dev --
 - **Interactive** (`/auto-dev` in a Claude Code session): identical decision logic, but under normal permission prompts and possibly in the maintainer's working checkout. **Never reset, clean, or stash an interactive checkout.** A dirty working tree or a branch other than `config.defaultBranch` does NOT block the GitHub-only steps (1-reconcile, 4-triage) — it only blocks steps that touch the working tree (2's CI/feedback fixes, 3-build). If a working-tree step is what the tick needs and the tree is dirty, report that and stop rather than stashing or resetting anything.
 - **Dry run** (`/auto-dev dry-run`, or the user asks for a dry run): execute the full tick logic **read-only**. Gather all state, decide exactly what a live tick would do, and print it as the exit report with every action prefixed `would:` — but post no comments, change no labels, create no branches/commits/PRs, and push nothing. This is the recommended first test and is always safe to run.
 
-**Overlap & isolation.** With no lockfile, the scheduled task must not overlap its own runs — set the cadence comfortably longer than a typical tick (a tick that builds can take many minutes). The label state machine is the backstop (work is claimed by swapping to In-progress, and at most one PR is ever in flight), but two truly concurrent ticks could still race when picking the oldest Ready issue, so don't schedule tighter than a tick can finish. Each scheduled run is its own disposable sandbox, so runs never share a working tree.
+**Overlap & isolation.** With no lockfile, the scheduled task must not overlap its own runs — set the cadence comfortably longer than a typical tick (a tick that builds can take many minutes). The label state machine is the backstop: work is claimed by swapping to In-progress, and the build step is gated on the count of open automated PRs being below `config.autoDev.maxPrsInFlight`. Two truly concurrent ticks could still race — both picking the same oldest Ready issue, or a fresh tick mistaking a build that's mid-flight (labelled In-progress but not yet PR'd) for a crashed orphan and rebuilding it. Step 1's **orphan age-gate** closes the second race (only reclaim a PR-less In-progress issue once its label event is older than `config.autoDev.orphanReclaimMinutes`); for the first, still don't schedule tighter than a build tick can finish. Each scheduled run is its own disposable sandbox, so runs never share a working tree.
 
 **Model tier.** A tick drafts plans, writes code, and adjudicates review feedback — schedule it on the **`capable`** tier; don't down-tier to save tokens on its triage pass, because the *same* run also builds (a skill can't switch its own model mid-run). The read-only **`dry-run`** mode does no judgment or code-gen and is safe on the **`fast`** tier. See [`../../../core/reference/model-tiers.md`](../../../core/reference/model-tiers.md).
 
@@ -88,9 +91,9 @@ The bot comment **marker** is `config.autoDev.marker` (default `<!-- auto-dev --
 
 ## The tick algorithm
 
-Work through these steps in order — the order **is** the priority. Execute the **first step that has work**, finish it, print the exit report, and stop. The ordering puts concrete, human-approved progress ahead of speculative grooming: advancing an open PR (step 2) and **building an approved issue (step 3) both outrank the triage pass (step 4)**, because a ready build is work the maintainer has already greenlit while triage only feeds the queue. Triage therefore runs on the ticks that would otherwise idle — when an open PR is merely waiting on the human, or when nothing is queued to build. Because at most one PR is in flight and merges are human-paced, most ticks either advance the open PR or, finding it idle, fall through to triage, so the backlog is still groomed steadily; it just never preempts a ready build.
+Work through these steps in order — the order **is** the priority. Execute the **first step that has work**, finish it, print the exit report, and stop. The ordering puts concrete, human-approved progress ahead of speculative grooming: advancing an open PR (step 2) and **building an approved issue (step 3) both outrank the triage pass (step 4)**, because a ready build is work the maintainer has already greenlit while triage only feeds the queue. With the default `config.autoDev.maxPrsInFlight` of `1`, an open PR blocks building until it merges, so most ticks either advance that PR or, finding it quiescent, fall through to triage. With a higher cap, an open PR **no longer blocks building**: a tick advances an open PR only when one actually needs work (CI red, unaddressed feedback, a draft to resume, or a review-window timeout that triggers a fallback self-review); when every open PR is quiescent (waiting on the maintainer's review or merge) and the in-flight count is below the cap, the tick builds the next Ready issue instead. That's what drains the queue overnight — each merge-blocked-but-quiescent PR simply frees the tick to build the following issue, up to the cap. Triage runs on the ticks that would otherwise idle (all PRs quiescent, and either nothing is Ready or the cap is reached).
 
-Do not fall through to later steps after completing one, with one exception: **step 2 falls through to the triage pass (step 4) when the open PR needs nothing** — that waiting tick is spent grooming the backlog instead of idling. (The build step is skipped on those ticks regardless: it is gated on no PR being open.)
+Do not fall through to later steps after completing one, with one exception chain for the **idle** case: when **step 2 finds every open PR quiescent** (nothing to advance), it falls through to **step 3 (build)**, which runs if the in-flight count is below `config.autoDev.maxPrsInFlight` and something is Ready; if step 3 also has no work (at the cap, or nothing Ready), it falls through to **step 4 (triage)**. A tick that _does_ advance a PR (fixes CI, answers feedback) stops there — that was its unit of work.
 
 ### Step 0 — Preflight & environment
 
@@ -138,11 +141,17 @@ For issues labeled In-progress:
 
 - **PR merged** (or issue closed by `Fixes #N`): remove the In-progress label. If the issue is somehow still open after its PR merged, comment (with marker) linking the merged PR and noting it may be closable — but leave closing to the human.
 - **PR closed without merging**: treat as rejection of the approach. Remove the In-progress label, add the Skip label, and comment (with marker) that the PR was closed unmerged and the issue needs human direction before auto-dev will touch it again.
-- **No PR exists at all** (a previous tick crashed between labeling and PR creation): treat the issue as Ready in step 3 (build) — its plan is already approved.
+- **No PR exists at all** — either a previous tick crashed between labeling and PR creation, or a build is running _right now_ in a concurrent tick. Distinguish by the age of the most recent In-progress `labeled` event: if it is older than `config.autoDev.orphanReclaimMinutes` (default 90), treat the issue as a crashed orphan and let step 3 rebuild it (its plan is already approved); if it is younger, assume a build is mid-flight and **leave the issue untouched this tick** — do not reclaim or rebuild. Read the label age from the timeline:
 
-### Step 2 — Advance the open automated PR
+  ```bash
+  gh api "repos/<config.repo>/issues/<N>/timeline" --paginate \
+    | jq -r --arg l '<config.autoDev.stateLabels.inProgress>' \
+        '[.[] | select(.event=="labeled" and .label.name==$l)] | last | .created_at'
+  ```
 
-If an automated PR is open, this tick belongs to it.
+### Step 2 — Advance an open automated PR
+
+If one or more automated PRs are open, pick the **single most-urgent** one to advance this tick (one PR per tick keeps the tick bounded). Urgency order, oldest-first within a tier: (1) a **draft** to resume, (2) **CI red**, (3) **unaddressed feedback** (the newest comment on a thread lacks the marker — third-party bots' auto-generated notices don't count; see item 3 of the review loop), (4) **unreviewed past the review window** — ready, CI green, no review activity from any human or third-party bot, older than `config.autoDev.fallbackReviewMinutes`, and no prior fallback self-review (see **Fallback self-review** below). A PR with none of these is **quiescent** — waiting on the maintainer's review or merge. If every open PR is quiescent, step 2 has no work: fall through to step 3 (build). Otherwise advance that one PR with the loop below and stop.
 
 **Draft PR** (a yielded partial build from step 3): resume the implementation first — finish the plan, run the full pre-flight, **behaviorally verify it (step 3, item 6)**, push, and mark it ready with `gh pr ready` (subject to the same verification gate — never mark ready on a failing or silently-skipped verification). Only then does the review loop below apply.
 
@@ -153,7 +162,7 @@ If an automated PR is open, this tick belongs to it.
 3. **New feedback since the skill's last reply?** A thread is unaddressed if its newest comment lacks `config.autoDev.marker`. **Not feedback:** a third-party bot's auto-generated boilerplate — CodeRabbit rate-limit notices, walkthrough/summary comments, "finishing touches" checklists — identifiable by an HTML comment of the form `<!-- This is an auto-generated comment: … -->` in the body. Never reply to those and never count them as unaddressed feedback (a rate-limit notice matters only as the fallback-review trigger below). For real feedback, triage each item on its merits (CodeRabbit is not always right), fix valid items with **focused commits** (one logical fix per commit, conventional subjects), push, then **reply to every thread** — including ones you decline, with a one-sentence reason. Replies carry the marker.
 4. **Human feedback** outranks bot feedback. If a human reviewer and CodeRabbit conflict, follow the human and say so in the reply to the bot.
 5. **Scope creep requested in review?** Acknowledge in a reply, file a follow-up issue (it enters this same pipeline untriaged), link it, and keep the PR scoped.
-6. **Nothing new** (no new comments, CI green, all threads answered): the PR is waiting on review or merge — *unless it qualifies for a fallback self-review*. Check the fallback conditions below; if they all hold, do the self-review this tick and stop. Otherwise the PR is genuinely quiescent: print that in the exit report and **fall through to the triage pass (step 4, triage only)** — never build, since a PR is already in flight.
+6. **Nothing new** (no new comments, CI green, all threads answered): this PR is quiescent, waiting on the maintainer's review or merge — *unless it qualifies for a fallback self-review*. Check the fallback conditions below; if they all hold, do the self-review this tick and stop. Otherwise it isn't this tick's work; note it in the exit report and, since advancing it produced nothing, **fall through to step 3 (build)** — which builds the next Ready issue if the in-flight count is below `config.autoDev.maxPrsInFlight`, or itself falls through to triage.
 
 **Fallback self-review** (when CodeRabbit can't keep up): CodeRabbit normally reviews within minutes of a PR going ready; when it hits its rate limits it stays silent or posts only a rate-limit/"in queue" notice, and the PR would otherwise sit with no review signal at all, blocking the maintainer's merge decision. The pipeline reviews its own PR to fill that gap. A PR qualifies when **all** of these hold:
 
@@ -173,11 +182,13 @@ After the fallback review is posted, the PR counts as quiescent. If CodeRabbit l
 
 **Re-triggering CodeRabbit.** Its rate-limit notice offers two re-triggers: pushing new commits, or a `@coderabbitai review` comment. The fallback review's own fix-push therefore doubles as a re-trigger — desirable, since a real external review may follow. But **never post the `@coderabbitai review` trigger yourself**: a bare command comment from the maintainer's account without the marker would be classified by every later tick as human input (invariant 3), while adding the marker may break CodeRabbit's command parsing. The fallback summary instead reminds the maintainer they can trigger it manually.
 
-### Step 3 — Build (only if NO automated PR is open)
+### Step 3 — Build (only if under the in-flight cap)
 
-Runs only when no automated PR is in flight **and** there is a Ready issue (or a step-1 orphan) to build — building approved, human-greenlit work outranks the triage pass below, so it never waits behind backlog grooming. If a PR is open, or nothing is Ready, this step has no work; fall through to step 4.
+Runs when the number of open automated PRs is **below `config.autoDev.maxPrsInFlight`** **and** there is a Ready issue (or a reclaimed step-1 orphan) to build — building approved, human-greenlit work outranks the triage pass below, so it never waits behind backlog grooming. If the in-flight count is already at the cap, or nothing is Ready, this step has no work; fall through to step 4. (With the default cap of `1`, "below the cap" means no automated PR is open — the classic single-PR gate.)
 
-Take the **oldest** Ready issue (or a step-1 orphan). Then:
+When the cap is above `1`, several PRs may be open at once, so each build still branches from a **fresh default branch** and is blind to the other open PRs' changes. Independent issues (disjoint files) are safe. When the oldest Ready issue obviously overlaps an already-open automated PR's files, prefer the next non-overlapping Ready issue to reduce merge-time conflicts and note the skip in the exit report — a best-effort heuristic, not a guarantee; the maintainer resolves any residual conflict at merge/rebase time.
+
+Take the **oldest** eligible Ready issue (or a step-1 orphan). Then:
 
 1. Swap labels: remove the Ready label, add the In-progress label.
 2. Branch from a fresh default branch: `git checkout <config.defaultBranch> && git pull --ff-only && git checkout -b <config.autoDev.branchPrefix><N>-<short-slug>`.
@@ -326,7 +337,7 @@ Every tick ends by printing a structured report — it is the run's summary outp
 ```text
 auto-dev tick — <ISO timestamp>
 step executed: <0-failed | 1-reconcile | 2-pr-advance | 3-build | 4-triage | 5-idle>
-open auto PR: #<n> (<status>) | none
+open auto PRs (<count>/<config.autoDev.maxPrsInFlight>): #<n> (<status>), … | none
 actions:
 - #123: asked 2 clarifying questions → needs-info
 - #145: plan approved by reply → ready
@@ -349,7 +360,7 @@ errors: <none | details>
 - Don't post more than one fallback self-review per PR, and don't self-review a PR that already has human or third-party review activity — the fallback exists only to fill the gap when CodeRabbit can't keep up.
 - Don't reply to third-party bots' auto-generated notices (rate-limit, walkthrough, finishing-touches boilerplate), and don't post bot trigger commands like `@coderabbitai review` — a marker-less command comment reads as human input to every later tick.
 - Don't create the `config.autoDev.prLabel` label yourself — only apply it; bootstrap creates it. If it's missing, note it and continue.
-- Don't start a second build while an automated PR is open.
+- Don't start a build while the open automated PR count is at `config.autoDev.maxPrsInFlight` (with the default cap of `1`, that means while any automated PR is open).
 - Don't post a second question/plan when the previous one is still unanswered.
 - Don't park an issue on your own initiative — only _propose_ parking; the maintainer parks by replying "park it" or adding the Parked label. (The Parked label is set by the skill solely on a human park reply, or by the human directly.)
 - Don't re-propose parking, re-ask, or re-plan a Parked issue — it rests until the maintainer removes the label or adds a comment _after_ the park. Don't remove the Parked label yourself except when re-triaging it because the maintainer commented after parking.

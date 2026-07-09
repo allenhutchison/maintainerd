@@ -69,7 +69,9 @@
     "excludedLabels": ["epic", "question", "wontfix", "duplicate", "invalid"],
     "openPrsAsDraft": true,
     "prLabel": "auto:pr",
-    "fallbackReviewMinutes": 60
+    "fallbackReviewMinutes": 60,
+    "maxPrsInFlight": 1,
+    "orphanReclaimMinutes": 90
   },
   "researchRadar": {
     "themes": "derive",
