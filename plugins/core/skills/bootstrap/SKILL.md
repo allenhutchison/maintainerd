@@ -88,7 +88,10 @@ Infer:
   `CLAUDE.md` are usually product/contributor docs. Present your split and let the user adjust.
 - `changelogDir`, `researchRadarDir` — default under `planning/` if it exists, else propose a
   location.
-- `prTemplate` — whichever template path exists; if none, note it for step 5.
+- `prTemplate` — whichever template path exists. If neither exists, the value is decided by the
+  step 5 ask: the path of the template you'll scaffold in step 7 if the user wants one, else
+  explicit `null`. **Never write a path to a file that doesn't exist** — create-pr would try to
+  enforce a template it can't read.
 - `skillsDir` — where this repo keeps local skill scaffolding (`.claude/skills/` or `.agents/skills/`).
 
 ### 5. Confirm the ambiguous bits, then assemble the JSON
@@ -96,6 +99,12 @@ Infer:
 Use `AskUserQuestion` for anything you couldn't determine confidently — typically: which plugins
 they installed (so the `dailyUpdate.subSkills` roster lists only real skills), whether auto-dev is
 `enabled`, label names if they differ from the defaults, and the research-radar `userAgent` email.
+
+If step 4 found no PR template, include the offer in this ask: **create a minimal template**
+(step 7 scaffolds it; `paths.prTemplate` gets its path) or **skip it** (`paths.prTemplate: null` —
+create-pr then uses its built-in Summary / Changes / Checklist fallback). Recommend creating one:
+the repo-ops and auto-dev skills write better PR bodies against a template than against the
+fallback.
 
 Also determine the **release** model. If the repo ships versioned releases, detect the version-bump
 mechanism (`npm version` + a `postversion` push hook, `hatch version`, `bump2version`, a manual
@@ -141,10 +150,36 @@ re-run, leave populated ones untouched). Seed each from what the repo already do
 Each scaffolded file should start with a one-line header explaining what reads it and that it's
 safe to edit freely.
 
-### 7. Offer the PR template
+### 7. Create the PR template (if agreed)
 
-If `paths.prTemplate` points at a file that doesn't exist, offer to create a minimal one
-(`## Summary`, `## Changes`, `## Test plan`). Don't force it — some repos don't use templates.
+If the user opted in during step 5, write the minimal template at the path you put in
+`paths.prTemplate` (conventionally `.github/PULL_REQUEST_TEMPLATE.md`):
+
+```markdown
+## Summary
+
+<!-- What this PR does and why. Link the issue: Fixes #<number>. -->
+
+## Changes
+
+-
+
+## Test plan
+
+<!-- How the change was verified. -->
+
+## Checklist
+
+- [ ] Tests pass locally
+- [ ] Documentation updated (or N/A with a reason)
+```
+
+If they declined, `paths.prTemplate` is `null` and there's nothing to create — don't force it,
+some repos don't use templates.
+
+**Re-run case:** if an existing config's `paths.prTemplate` points at a file that doesn't exist
+(deleted, or a stale bootstrap wrote a bad path), make the same offer: create the file there, or
+set the key to `null`. This matches the `doctor` fix for the same finding.
 
 ### 8. Offer to create the labels
 

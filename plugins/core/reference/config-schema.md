@@ -62,7 +62,7 @@ Read with whatever is convenient — the `Read` tool, or `jq` for a single value
     "productDocs":  ["docs/", "README.md", "AGENTS.md"], // user-facing docs (audit-product-docs)
     "changelogDir": "planning/changelog/",       // where daily-changelog writes YYYY-MM-DD.md
     "researchRadarDir": "planning/research-radar/", // where research-radar writes its digests
-    "prTemplate":   ".github/PULL_REQUEST_TEMPLATE.md", // PR body template create-pr enforces
+    "prTemplate":   ".github/PULL_REQUEST_TEMPLATE.md", // PR body template create-pr enforces; null = repo uses no template
     "skillsDir":    ".claude/skills/"            // local skill scaffolding dir; pre-flight clean-tree exception
   },
 
@@ -202,6 +202,11 @@ All paths are repo-root-relative. `designDocs` and `productDocs` are **arrays** 
 several doc roots; entries may be directories or individual files). `skillsDir` names the directory
 where untracked skill scaffolding may legitimately appear — the audits treat untracked files there
 as benign rather than "a human is mid-work."
+
+`prTemplate` may be `null`: the repo deliberately uses no PR template, and `create-pr` (and
+anything else that writes PR bodies) falls back to its built-in Summary / Changes / Checklist
+structure. A non-null value must point at a file that exists — bootstrap offers to scaffold one
+when the repo has none, and `doctor` flags a dangling path.
 
 ### `guidelines`
 

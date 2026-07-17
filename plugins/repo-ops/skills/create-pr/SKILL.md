@@ -95,8 +95,10 @@ Complete every item. Use `[x]` for done and `[ ]` for not-applicable items, addi
 explains why. Tick the CI-checks item only after the pre-flight gates above have actually passed
 locally, and disclose AI assistance honestly where the template asks for it.
 
-If `config.paths.prTemplate` is `null` or missing, fall back to the Summary / Changes / Checklist
-structure above and note in your run report that the repo has no template.
+If `config.paths.prTemplate` is `null`, the repo deliberately uses no template — fall back to the
+Summary / Changes / Checklist structure above without comment. If the key points at a file that
+**doesn't exist**, use the same fallback but flag the dangling path in your run report and suggest
+re-running `/bootstrap` (which offers to scaffold a template or set the key to `null`).
 
 ## Voice
 
